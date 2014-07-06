@@ -9,11 +9,18 @@ Will add Blob service support soon.
 Usage
 -----
 
-With source:
+If you start with source code, please first build the project `src/AzureStorageDrive` with Visual Studio. Or you can use release bits.
 
->1. Build the project src/AzureStorageDrive with Visual Studio
->2. In ~\bin\Debug, edit `start.cmd` with your storage account name/key. This is one-off operation.
->3. Run `start.cmd`, and a new window will be opened at the "mounted" file service, e.g. x:\
+For quickstart:
+
+>1. In bin folder, edit `start.cmd` with your storage account name/key. This is one-off operation.
+>2. Run `start.cmd`, and a new window will be opened at the "mounted" file service, e.g. x:\
+
+In your other PowerShell session, you can follow these steps:
+
+>1. `import-module <path>\AzureStorageDrive.psd1`
+>2. `New-PSDrive -name <DriveLabelToMountAt, e.g. x> -PSProvider AzureFileDrive -root http://<account>.file.core.windows.net/?account=<accountName>&key=<storageKey>";`
+
 
 Supported Operations
 --------------------
