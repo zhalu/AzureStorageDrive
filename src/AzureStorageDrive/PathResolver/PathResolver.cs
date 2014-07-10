@@ -29,14 +29,14 @@ namespace AzureStorageDrive
 
             if (parts.Count == 0)
             {
-                result.PathType = PathType.Root;
+                result.PathType = PathType.AzureFileRoot;
             }
 
             if (parts.Count > 0)
             {
                 result.Share = client.GetShareReference(parts[0]);
                 result.Directory = result.Share.GetRootDirectoryReference();
-                result.PathType = PathType.Directory;
+                result.PathType = PathType.AzureFileDirectory;
                 result.RootDirectory = result.Directory;
             }
 
@@ -46,10 +46,10 @@ namespace AzureStorageDrive
                 {
                     //assume it's directory
                     var dir = result.Directory.GetDirectoryReference(parts[level]);
-                    if (result.PathType == PathType.Directory)
+                    if (result.PathType == PathType.AzureFileDirectory)
                     {
                         result.Directory = dir;
-                        result.PathType = PathType.Directory;
+                        result.PathType = PathType.AzureFileDirectory;
                         continue;
                     }
                 }
@@ -57,27 +57,27 @@ namespace AzureStorageDrive
                 //last element
                 if (parts.Count > 1)
                 {
-                    if (hint == PathType.Directory || hint == PathType.Unknown)
+                    if (hint == PathType.AzureFileDirectory || hint == PathType.Unknown)
                     {
                         //assume it's directory first
                         var dir = result.Directory.GetDirectoryReference(parts.Last());
-                        if (result.PathType == PathType.Directory && (skipCheckExistence || dir.Exists()))
+                        if (result.PathType == PathType.AzureFileDirectory && (skipCheckExistence || dir.Exists()))
                         {
                             result.Directory = dir;
-                            result.PathType = PathType.Directory;
+                            result.PathType = PathType.AzureFileDirectory;
                             return result;
                         }
 
                     }
 
                     //2. assume it's a file
-                    if (hint == PathType.File || hint == PathType.Unknown)
+                    if (hint == PathType.AzureFile || hint == PathType.Unknown)
                     {
                         var file = result.Directory.GetFileReference(parts.Last());
-                        if (result.PathType == PathType.Directory && (skipCheckExistence || file.Exists()))
+                        if (result.PathType == PathType.AzureFileDirectory && (skipCheckExistence || file.Exists()))
                         {
                             result.File = file;
-                            result.PathType = PathType.File;
+                            result.PathType = PathType.AzureFile;
                             return result;
                         }
                     }
@@ -86,7 +86,7 @@ namespace AzureStorageDrive
                 result.PathType = PathType.Unknown;
             }
 
-            if (result.PathType == PathType.Directory && hint == PathType.File)
+            if (result.PathType == PathType.AzureFileDirectory && hint == PathType.AzureFile)
             {
                 result.PathType = PathType.Invalid;
             }

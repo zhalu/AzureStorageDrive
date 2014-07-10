@@ -71,11 +71,11 @@ namespace AzureStorageDrive
 
             switch (result.PathType)
             {
-                case PathType.Root:
+                case PathType.AzureFileRoot:
                     return ListShares(this.Client);
-                case PathType.Directory:
+                case PathType.AzureFileDirectory:
                     return ListDirectory(result.Directory);
-                case PathType.File:
+                case PathType.AzureFile:
                     return ListFile(result.File);
                 default:
                     return null;
@@ -131,12 +131,12 @@ namespace AzureStorageDrive
 
             switch (r.PathType)
             {
-                case PathType.Root:
+                case PathType.AzureFileRoot:
                     return;
-                case PathType.Directory:
+                case PathType.AzureFileDirectory:
                     CreateDirectoryAndShare(r.Directory);
                     return;
-                case PathType.File:
+                case PathType.AzureFile:
                     throw new Exception("File " + path + " already exists.");
                 default:
                     return;
@@ -201,8 +201,8 @@ namespace AzureStorageDrive
 
         internal System.Management.Automation.Provider.IContentReader GetReader(string path)
         {
-            var r = PathResolver.ResolvePath(this.Client, path, hint: PathType.File, skipCheckExistence: false);
-            if (r.PathType == PathType.File)
+            var r = PathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFile, skipCheckExistence: false);
+            if (r.PathType == PathType.AzureFile)
             {
                 var reader = new AzureFileReader(GetFile(path));
                 return reader;
@@ -213,8 +213,8 @@ namespace AzureStorageDrive
 
         public CloudFile GetFile(string path)
         {
-            var r = PathResolver.ResolvePath(this.Client, path, hint: PathType.File);
-            if (r.PathType == PathType.File)
+            var r = PathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFile);
+            if (r.PathType == PathType.AzureFile)
             {
                 return r.File;
             }
@@ -272,7 +272,7 @@ namespace AzureStorageDrive
 
             switch (r.PathType)
             {
-                case PathType.File:
+                case PathType.AzureFile:
                     if (targetIsDir)
                     {
                         destination = PathResolver.Combine(destination, r.Parts.Last());
@@ -280,7 +280,7 @@ namespace AzureStorageDrive
 
                     r.File.DownloadToFile(destination, FileMode.CreateNew);
                     break;
-                case PathType.Directory:
+                case PathType.AzureFileDirectory:
                     if (string.IsNullOrEmpty(r.Directory.Name))
                     {
                         //at share level
@@ -291,7 +291,7 @@ namespace AzureStorageDrive
                         DownloadDirectory(r.Directory, destination);
                     }
                     break;
-                case PathType.Root:
+                case PathType.AzureFileRoot:
                     var shares = this.Client.ListShares();
                     foreach (var share in shares)
                     {
@@ -347,7 +347,7 @@ namespace AzureStorageDrive
             var local = PathResolver.SplitPath(localPath);
             switch (r.PathType)
             {
-                case PathType.Root:
+                case PathType.AzureFileRoot:
                     if (localIsDirectory)
                     {
                         var share = CreateShare(local.Last());
@@ -367,7 +367,7 @@ namespace AzureStorageDrive
                         throw new Exception("Cannot upload file as file share.");
                     }
                     break;
-                case PathType.Directory:
+                case PathType.AzureFileDirectory:
                     if (localIsDirectory)
                     {
                         UploadDirectory(localPath, r.Directory);
@@ -377,7 +377,7 @@ namespace AzureStorageDrive
                         UploadFile(localPath, r.Directory);
                     }
                     break;
-                case PathType.File:
+                case PathType.AzureFile:
                 default:
                     break;
             }

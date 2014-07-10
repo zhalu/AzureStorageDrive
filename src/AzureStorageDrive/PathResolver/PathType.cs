@@ -3,8 +3,11 @@
     public enum PathType
     {
         Root,
-        Directory,
-        File,
+        ProviderRoot,
+
+        AzureFileRoot,
+        AzureFileDirectory,
+        AzureFile,
         Invalid,
         Unknown
     }

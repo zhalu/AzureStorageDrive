@@ -7,9 +7,11 @@ namespace AzureStorageDrive
     {
         public PathResolveResult()
         {
-            this.PathType = AzureStorageDrive.PathType.Invalid;
+            this.PathType = PathType.Invalid;
         }
         public PathType PathType { get; set; }
+
+
         public CloudFileShare Share { get; set; }
         public CloudFileDirectory Directory { get; set; }
         public CloudFile File { get; set; }
@@ -20,11 +22,11 @@ namespace AzureStorageDrive
         {
             switch (PathType)
             {
-                case AzureStorageDrive.PathType.File:
+                case AzureStorageDrive.PathType.AzureFile:
                     return this.File.Exists();
-                case AzureStorageDrive.PathType.Directory:
+                case AzureStorageDrive.PathType.AzureFileDirectory:
                     return this.Directory.Exists();
-                case AzureStorageDrive.PathType.Root:
+                case AzureStorageDrive.PathType.AzureFileRoot:
                     return true;
                 default:
                     return false;
