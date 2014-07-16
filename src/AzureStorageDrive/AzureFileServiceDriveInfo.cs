@@ -12,20 +12,14 @@ using System.Threading.Tasks;
 
 namespace AzureStorageDrive
 {
-    public class AzureFileServiceDriveInfo : PSDriveInfo
+    public class AzureFileServiceDriveInfo : AbstractDriveInfo
     {
         public CloudFileClient Client { get; set; }
-        public string Endpoint { get;set;}
+        public string Endpoint { get; set; }
+        public CmdletProvider RootProvider { get; set; }
 
-        private AzureFileServiceDriveInfo(PSDriveInfo driveInfo)
-            : base(driveInfo)
+        public AzureFileServiceDriveInfo(string url, CmdletProvider rootProvider)
         {
-
-        }
-
-        public static AzureFileServiceDriveInfo Parse(PSDriveInfo driveInfo)
-        {
-            var url = driveInfo.Root;
             var parts = url.Split('?');
             var endpoint = parts[0];
             var dict = ParseValues(parts[1]);
@@ -36,33 +30,23 @@ namespace AzureStorageDrive
             var account = new CloudStorageAccount(cred, null, null, null, fileStorageUri: new StorageUri(new Uri(endpoint)));
             var client = account.CreateCloudFileClient();
 
-            var info = new PSDriveInfo(name: driveInfo.Name, provider: driveInfo.Provider, root: PathResolver.Root, description: string.Empty, credential: null);
+            var info = new PSDriveInfo(name: string.Empty, provider: null, root: PathResolver.Root, description: string.Empty, credential: null);
 
-            return new AzureFileServiceDriveInfo(info)
-            {
-                Client = client,
-                Endpoint = endpoint
-            };
+            this.Client = client;
+            this.Endpoint = endpoint;
+            this.RootProvider = rootProvider;
         }
 
-        private static Dictionary<string, string> ParseValues(string str)
+        public override void NewItem(
+                            string path,
+                            string type,
+                            object newItemValue)
         {
-            var dict = new Dictionary<string, string>();
-            var sep = new char[] {'='};
-            var parts = str.Split('&');
-            foreach (var p in parts)
-            {
-                var pair = p.Split(sep, 2);
-                dict.Add(pair[0].ToLowerInvariant(), pair[1]);
-            }
 
-            return dict;
         }
-
-        public string ExtractPath(string rawPath)
+        public override void GetChildItems(string path, bool recurse)
         {
-            var path = rawPath.Split('?')[0];
-            return path.Substring(this.Root.Length);
+
         }
 
         internal IEnumerable<object> ListItems(string path)
@@ -199,7 +183,7 @@ namespace AzureStorageDrive
             file.UploadText(content);
         }
 
-        internal System.Management.Automation.Provider.IContentReader GetReader(string path)
+        public override IContentReader GetContentReader(string path)
         {
             var r = PathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFile, skipCheckExistence: false);
             if (r.PathType == PathType.AzureFile)
@@ -444,16 +428,18 @@ namespace AzureStorageDrive
             offset += total;
 
             var l = new List<string>();
-            var fullparts = (int) Math.Floor(total * 1.0 / unit);
-            for(var i = 0; i < fullparts; ++i) {
+            var fullparts = (int)Math.Floor(total * 1.0 / unit);
+            for (var i = 0; i < fullparts; ++i)
+            {
                 var s = Encoding.UTF8.GetString(b, i * unit, unit);
-                
+
                 l.Add(s);
             }
 
             //last part
-            if (total > unit * fullparts) {
-                var s = Encoding.UTF8.GetString(b, fullparts * unit, (int) (total - unit * fullparts));
+            if (total > unit * fullparts)
+            {
+                var s = Encoding.UTF8.GetString(b, fullparts * unit, (int)(total - unit * fullparts));
                 l.Add(s);
             }
 
@@ -463,7 +449,7 @@ namespace AzureStorageDrive
 
         public void Seek(long offset, System.IO.SeekOrigin origin)
         {
-            this.offset = (int) offset;
+            this.offset = (int)offset;
         }
 
         public void Dispose()

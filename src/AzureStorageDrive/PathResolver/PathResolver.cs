@@ -147,6 +147,17 @@ namespace AzureStorageDrive
             return list;
         }
 
+        public static string GetSubpath(string path)
+        {
+            var l = SplitPath(path);
+            if (l.Count > 0)
+            {
+                l.RemoveAt(0);
+            }
+
+            return string.Join(PathResolver.PathSeparator, l.ToArray());
+        }
+
         public static string Combine(IEnumerable<string> parts)
         {
             return Combine(parts.ToArray());

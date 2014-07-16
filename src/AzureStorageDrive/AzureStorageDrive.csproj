@@ -69,9 +69,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AbstractDriveProvider.cs" />
+    <Compile Include="AbstractDriveInfo.cs" />
     <Compile Include="AzureFileServiceDriveInfo.cs" />
     <Compile Include="AzureFileServiceProvider.cs" />
+    <Compile Include="DriveFactory.cs" />
     <Compile Include="GeniusDriveProvider.cs" />
     <Compile Include="PathResolver\PathResolver.cs" />
     <Compile Include="PathResolver\PathResolveResult.cs" />
