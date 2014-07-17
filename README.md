@@ -1,26 +1,28 @@
-AzureStorageDrive
+GeniusDrive
 ====================
 
 "Mount" an Azure Storage File service just like a native disk in PowerShell. You can access it anywhere outside the data center.
 
 
-Will add Blob service support soon.
+Will add Azure Blob / AWS S3 service support soon.
 
 Usage
 -----
 
-If you start with source code, please first build the project `src/AzureStorageDrive` with Visual Studio. Or you can use release bits.
+If you start with source code, please first build the project `src/AzureStorageDrive` with Visual Studio.
 
 For quickstart:
 
 >1. In bin folder, edit `start.cmd` with your storage account name/key. This is one-off operation.
->2. Run `start.cmd`, and a new window will be opened at the "mounted" file service, e.g. x:\
+>2. Run `start.cmd`, and a new window will be opened at the genius drive, e.g. x:\. And your file service is mounted at x:\f
+>3. You can mount more Azure File account with: `ni <mountedLabel> -type AzureFile -value http://<account>.file.core.windows.net/?account=<account>&key=<key>`
 
 In your other PowerShell session, you can follow these steps:
 
->1. `import-module <path>\AzureStorageDrive.psd1`
->2. `New-PSDrive -name <DriveLabelToMountAt, e.g. x> -PSProvider AzureFileDrive -root http://<account>.file.core.windows.net/?account=<accountName>&key=<storageKey>";`
-
+>1. `import-module <path>\GeniusDrive.psd1`
+>2. `New-PSDrive -name <DriveLabelToMountAt, e.g. x> -psprovider GeniusDrive -root /;`
+>3. `<DriveLabelToMountAt, e.g. x>:`
+>4. `ni <mountedLabel> -type AzureFile -value http://<account>.file.core.windows.net/?account=<account>&key=<key>`
 
 Supported Operations
 --------------------
