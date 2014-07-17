@@ -15,3 +15,5 @@
 /src/packages/System.Spatial.5.6.0
 /src/AzureStorageDrive.v12.suo
 /src/AzureStorageDrive/AzureStorageDrive.csproj.user
+/src/AzureStorageDrive/start.test.cmd
+/src/packages/AWSSDK.2.1.7.0

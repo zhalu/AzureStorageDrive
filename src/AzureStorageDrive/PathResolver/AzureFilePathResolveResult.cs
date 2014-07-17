@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace AzureStorageDrive
 {
-    public class PathResolveResult
+    public class AzureFilePathResolveResult
     {
-        public PathResolveResult()
+        public AzureFilePathResolveResult()
         {
             this.PathType = PathType.Invalid;
         }

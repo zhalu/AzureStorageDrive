@@ -69,22 +69,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AbstractDriveInfo.cs" />
-    <Compile Include="AzureFileServiceDriveInfo.cs" />
+    <Compile Include="DriveInfo\AbstractDriveInfo.cs" />
+    <Compile Include="DriveInfo\AzureFileServiceDriveInfo.cs" />
     <Compile Include="AzureFileServiceProvider.cs" />
-    <Compile Include="DriveFactory.cs" />
+    <Compile Include="DriveInfo\DriveFactory.cs" />
     <Compile Include="GeniusDriveProvider.cs" />
+    <Compile Include="PathResolver\AzureFilePathResolver.cs" />
     <Compile Include="PathResolver\PathResolver.cs" />
-    <Compile Include="PathResolver\PathResolveResult.cs" />
+    <Compile Include="PathResolver\AzureFilePathResolveResult.cs" />
     <Compile Include="PathResolver\PathType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Wrappers\IContainer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="AzureStorageDrive.psd1">
+    <None Include="config\AzureFile.types.ps1xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="AzureStorageDrive.format.ps1xml">
+    <None Include="GeniusDrive.psd1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="config\AzureFile.format.ps1xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </None>

@@ -10,6 +10,7 @@ namespace AzureStorageDrive
 {
     public abstract class AbstractDriveInfo
     {
+        public CmdletProvider RootProvider { get; set; }
         public string Name { get; set; }
         public abstract void NewItem(
                                     string path,
@@ -19,8 +20,10 @@ namespace AzureStorageDrive
         public abstract bool HasChildItems(string path);
         public abstract bool IsValidPath(string path);
         public abstract bool ItemExists(string path);
+        public abstract void RemoveItem(string path, bool recurse);
         public abstract bool IsItemContainer(string path);
         public abstract IContentReader GetContentReader(string path);
+        public abstract void GetChildNames(string path, ReturnContainers returnContainers);
 
         public abstract void GetProperty(string path, System.Collections.ObjectModel.Collection<string> providerSpecificPickList);
 

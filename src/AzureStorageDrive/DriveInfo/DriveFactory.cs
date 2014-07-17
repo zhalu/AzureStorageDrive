@@ -10,12 +10,12 @@ namespace AzureStorageDrive
     public static class DriveFactory
     {
 
-        public static AbstractDriveInfo CreateInstance(string type, object value, CmdletProvider provider)
+        public static AbstractDriveInfo CreateInstance(string type, object value, string name)
         {
             switch (type.ToLowerInvariant())
             {
                 case "azurefile":
-                    var d = new AzureFileServiceDriveInfo(value as string, provider);
+                    var d = new AzureFileServiceDriveInfo(value as string, name);
                     return d;
                 default:
                     return null;

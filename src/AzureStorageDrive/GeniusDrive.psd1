@@ -24,8 +24,10 @@ CLRVersion='4.0'
 
 # Format files (.ps1xml) to be loaded when importing this module
 FormatsToProcess = @(
-    'AzureStorageDrive.format.ps1xml'
+    'config\AzureFile.format.ps1xml'
 )
+
+TypesToProcess = 'config\AzureFile.types.ps1xml'
 
 # Functions to export from this module
 FunctionsToExport = '*'

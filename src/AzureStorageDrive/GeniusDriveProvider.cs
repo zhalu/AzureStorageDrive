@@ -11,8 +11,6 @@ namespace AzureStorageDrive
     [CmdletProvider("GeniusDrive", ProviderCapabilities.None)]
     public class GeniusDriveProvider : NavigationCmdletProvider, IContentCmdletProvider, IPropertyCmdletProvider
     {
-        private Dictionary<string, AbstractDriveInfo> Drives = new Dictionary<string, AbstractDriveInfo>();
-
         #region DriveCmdlet
         protected override PSDriveInfo NewDrive(PSDriveInfo drive)
         {
@@ -28,8 +26,7 @@ namespace AzureStorageDrive
                 return null;
             }
 
-            var d = new PSDriveInfo(name: drive.Name, provider: null, root: PathResolver.Root, description: null, credential: null);
-
+            var d = new PSDriveInfo(name: drive.Name, provider: drive.Provider, root: PathResolver.Root, description: null, credential: null);
             return d;
         }
 
@@ -55,9 +52,9 @@ namespace AzureStorageDrive
         protected override void GetChildItems(string path, bool recurse)
         {
             var parts = PathResolver.SplitPath(path);
-            if (parts.Count == 0) //if listing root, then list all drives
+            if (parts.Count == 0) //if listing root, then list all PathResolver.Drives
             {
-                foreach (var pair in Drives)
+                foreach (var pair in PathResolver.Drives)
                 {
                     WriteItemObject(pair.Value, path, true);
                     if (recurse)
@@ -85,12 +82,20 @@ namespace AzureStorageDrive
             var parts = PathResolver.SplitPath(path);
             if (parts.Count == 0)
             {
-                return;
-            }
-
-            foreach (var pair in Drives)
+                foreach (var pair in PathResolver.Drives)
+                {
+                    WriteItemObject(pair.Key, "/", true);
+                }
+            } 
+            else
             {
-                WriteItemObject(pair.Key, "/", true);
+                var drive = GetDrive(parts[0]);
+                if (drive == null)
+                {
+                    return;
+                }
+
+                drive.GetChildNames(PathResolver.GetSubpath(path), returnContainers);
             }
         }
 
@@ -99,7 +104,7 @@ namespace AzureStorageDrive
             var parts = PathResolver.SplitPath(path);
             if (parts.Count == 0)
             {
-                return Drives.Count > 0;
+                return PathResolver.Drives.Count > 0;
             }
 
             var drive = GetDrive(parts[0]);
@@ -126,7 +131,7 @@ namespace AzureStorageDrive
             var drive = GetDrive(parts[0]);
             if (drive == null)
             {
-                drive = DriveFactory.CreateInstance(type, newItemValue, this);
+                drive = DriveFactory.CreateInstance(type, newItemValue, parts[0]);
                 if (drive == null)
                 {
                     WriteError(new ErrorRecord(
@@ -138,13 +143,17 @@ namespace AzureStorageDrive
                 }
                 else
                 {
-                    Drives.Add(type, drive);
+                    PathResolver.Drives.Add(parts[0], drive);
                 }
             }
-
-            //delegate it
-            drive.NewItem(PathResolver.GetSubpath(path), type, newItemValue);
-            return;
+            else
+            {
+                if (parts.Count > 1)
+                {
+                    //delegate it if needed
+                    drive.NewItem(PathResolver.GetSubpath(path), type, newItemValue);
+                }
+            }
         }
 
         protected override void CopyItem(string path, string copyPath, bool recurse)
@@ -154,7 +163,30 @@ namespace AzureStorageDrive
 
         protected override void RemoveItem(string path, bool recurse)
         {
-            throw new NotImplementedException();
+            var parts = PathResolver.SplitPath(path);
+            if (parts.Count == 0)
+            {
+                return;
+            }
+
+            //if the provider is not mounted, then return
+            var drive = GetDrive(parts[0]);
+            if (drive == null)
+            {
+                return;
+            }
+
+            if (parts.Count == 1)
+            {
+                //unmount it
+                var mountedLabel = parts[0];
+                UnmountDrive(parts[0]);
+            }
+            else
+            {
+                //delegate it
+                drive.RemoveItem(PathResolver.GetSubpath(path), recurse);
+            }
         }
         #endregion
 
@@ -213,13 +245,24 @@ namespace AzureStorageDrive
 
         private AbstractDriveInfo GetDrive(string mountedLabel)
         {
-            var key = Drives.Keys.Where(p => string.Equals(mountedLabel, p, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            var key = PathResolver.Drives.Keys.Where(p => string.Equals(mountedLabel, p, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
             if (key != default(string))
             {
-                return Drives[key];
+                var drive = PathResolver.Drives[key];
+                drive.RootProvider = this;
+                return drive;
             }
 
             return null;
+        }
+
+        private void UnmountDrive(string mountedLabel)
+        {
+            var key = PathResolver.Drives.Keys.Where(p => string.Equals(mountedLabel, p, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
+            if (key != default(string))
+            {
+                PathResolver.Drives.Remove(key);
+            }
         }
         #endregion
 
@@ -439,44 +482,7 @@ namespace AzureStorageDrive
 
             //delegate it
             drive.SetProperty(PathResolver.GetSubpath(path), propertyValue);
-            //var r = PathResolver.ResolvePath(this.FileDrive.Client, path, skipCheckExistence: false);
-            //switch (r.PathType)
-            //{
-            //    case PathType.AzureFile:
-            //        r.File.FetchAttributes();
-            //        MergeProperties(r.File.Metadata, propertyValue.Properties);
-            //        r.File.SetMetadata();
-            //        break;
-            //    case PathType.AzureFileDirectory:
-            //        if (r.Parts.Count() == 1)
-            //        {
-            //            r.Share.FetchAttributes();
-            //            MergeProperties(r.Share.Metadata, propertyValue.Properties);
-            //            r.Share.SetMetadata();
-            //        }
-            //        else
-            //        {
-            //            throw new Exception("Setting metadata/properties for directory is not supported");
-            //        }
-            //        break;
-            //    default:
-            //        break;
-            //}
         }
-
-        //private void MergeProperties(IDictionary<string, string> target, PSMemberInfoCollection<PSPropertyInfo> source)
-        //{
-        //    foreach (var info in source)
-        //    {
-        //        var name = info.Name;
-        //        if (target.ContainsKey(name))
-        //        {
-        //            target.Remove(name);
-        //        }
-
-        //        target.Add(name, info.Value.ToString());
-        //    }
-        //}
 
         public object SetPropertyDynamicParameters(string path, PSObject propertyValue)
         {

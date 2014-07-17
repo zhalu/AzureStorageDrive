@@ -8,6 +8,9 @@
         AzureFileRoot,
         AzureFileDirectory,
         AzureFile,
+
+
+
         Invalid,
         Unknown
     }

@@ -20,19 +20,19 @@ namespace AzureStorageDriveTest
         //[TestMethod]
         //public void Test1()
         //{
-        //    var r = PathResolver.ResolvePath(client, "");
+        //    var r = AzureFilePathResolver.ResolvePath(client, "");
         //    Assert.AreEqual(r.PathType, PathType.AzureFileRoot);
 
-        //    r = PathResolver.ResolvePath(client, "/");
+        //    r = AzureFilePathResolver.ResolvePath(client, "/");
         //    Assert.AreEqual(r.PathType, PathType.AzureFileRoot);
 
-        //    r = PathResolver.ResolvePath(client, "share");
+        //    r = AzureFilePathResolver.ResolvePath(client, "share");
         //    Assert.AreEqual(r.PathType, PathType.AzureFileDirectory);
 
-        //    r = PathResolver.ResolvePath(client, "share/hello/world");
+        //    r = AzureFilePathResolver.ResolvePath(client, "share/hello/world");
         //    Assert.AreEqual(r.PathType, PathType.AzureFileDirectory);
 
-        //    r = PathResolver.ResolvePath(client, "share/hello/world", hint: PathType.AzureFile);
+        //    r = AzureFilePathResolver.ResolvePath(client, "share/hello/world", hint: PathType.AzureFile);
         //    Assert.AreEqual(r.PathType, PathType.AzureFile);
         //}
     }

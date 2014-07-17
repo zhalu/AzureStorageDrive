@@ -11,4 +11,4 @@ set ACCOUNT=<your account>
 set KEY=<your key>
 
 @echo on
-powershell -noexit -command "import-module %ROOT%\AzureStorageDrive.psd1; New-PSDrive -name %DRIVE% -psprovider AzureFileDrive -root http://%ACCOUNT%.file.core.windows.net/?account=%ACCOUNT%`&key=%KEY%"; %DRIVE%:
+powershell -noexit -command "import-module %ROOT%\GeniusDrive.psd1; New-PSDrive -name %DRIVE% -psprovider GeniusDrive -root /; %DRIVE%:; ni f -type AzureFile -value http://%ACCOUNT%.file.core.windows.net/?account=%ACCOUNT%`&key=%KEY%"

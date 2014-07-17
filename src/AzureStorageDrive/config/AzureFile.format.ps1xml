@@ -2,6 +2,49 @@
 <Configuration>
   <ViewDefinitions>
     <View>
+      <Name>AzureStorageDrive.AzureFileServiceDriveInfos</Name>
+      <ViewSelectedBy>
+        <TypeName>AzureStorageDrive.AzureFileServiceDriveInfo</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <ScriptBlock>$_.Type</ScriptBlock>
+        <Label>Service</Label>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Type</Label>
+            <Width>15</Width>
+            <Alignment>Left</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Name</Label>
+            <Width>10</Width>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>URL</Label>
+            <Alignment>left</Alignment>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>$_.Type</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>$_.Name</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>$_.URL</ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
       <Name>Microsoft.WindowsAzure.Storage.File.CloudItems</Name>
       <ViewSelectedBy>
         <TypeName>Microsoft.WindowsAzure.Storage.File.CloudFile</TypeName>
@@ -38,10 +81,10 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <ScriptBlock>if ($_.Properties.gettype() -like '*FileDirectoryProperties') { "d" } elseif ($_.Properties.gettype() -like '*FileShareProperties') { "s" }</ScriptBlock>
+                <ScriptBlock>$_.DirectoryTag</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>if ($_.Properties.gettype() -like '*FileProperties') {$_.Properties.Length}</ScriptBlock>
+                <ScriptBlock>$_.Length</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>$_.Name</ScriptBlock>

@@ -70,115 +70,12 @@ namespace AzureStorageDrive
 
  //       #endregion
 
- //       #region ContainerCmdletProvider
- //       public override void GetChildItems(string path, bool recurse)
- //       {
- //           var folders = recurse ? new List<string>() : null;
+        
 
- //           var items = this.FileDrive.ListItems(path);
- //           this.FileDrive.HandleItems(items,
- //               (f) =>
- //               {
- //                   WriteItemObject(f, path, true);
- //               },
- //               (d) =>
- //               {
- //                   WriteItemObject(d, path, true);
- //                   if (recurse)
- //                   {
- //                       var p = PathResolver.Combine(path, d.Name);
- //                       folders.Add(p);
- //                   }
- //               },
- //               (s) =>
- //               {
- //                   WriteItemObject(s, path, true);
- //                   if (recurse)
- //                   {
- //                       var p = PathResolver.Combine(path, s.Name);
- //                       folders.Add(p);
- //                   }
- //               });
 
- //           if (recurse && folders != null)
- //           {
- //               foreach (var f in folders)
- //               {
- //                   GetChildItems(f, recurse);
- //               }
- //           }
- //       }
 
- //       public override void GetChildNames(string path, ReturnContainers returnContainers)
- //       {
- //           var r = PathResolver.ResolvePath(this.FileDrive.Client, path);
- //           switch (r.PathType)
- //           {
- //               case PathType.AzureFileRoot:
- //                   var shares = this.FileDrive.ListItems(path);
- //                   foreach (CloudFileShare s in shares)
- //                   {
- //                       WriteItemObject(s.Name, path, true);
- //                   }
- //                   break;
- //               case PathType.AzureFileDirectory:
- //                   var items = r.Directory.ListFilesAndDirectories();
- //                   var parentPath = PathResolver.Combine(r.Parts);
- //                   this.FileDrive.HandleItems(items,
- //                       (f) => WriteItemObject(f.Name, PathResolver.Root, false),
- //                       (d) => WriteItemObject(d.Name, PathResolver.Root, true),
- //                       (s) => { }
- //                       );
- //                   break;
- //               case PathType.AzureFile:
- //               default:
- //                   break;
- //           } 
- //       }
 
- //       public override bool HasChildItems(string path)
- //       {
- //           var r = PathResolver.ResolvePath(this.FileDrive.Client, path, hint: PathType.AzureFileDirectory, skipCheckExistence: false);
- //           return r.Exists();
- //       }
 
- //       public override void NewItem(
- //                                   string path, 
- //                                   string type,
- //                                   object newItemValue)
- //       {
- //           if (string.Equals(type, "Directory", StringComparison.InvariantCultureIgnoreCase))
- //           {
- //               this.FileDrive.CreateDirectory(path);
- //           }
- //           else if (string.Equals(type, "EmptyFile", StringComparison.InvariantCultureIgnoreCase))
- //           {
- //               if (newItemValue != null)
- //               {
- //                   var size = 0L;
- //                   if (long.TryParse(newItemValue.ToString(), out size))
- //                   {
- //                       this.FileDrive.CreateEmptyFile(path, size);
- //                   }
- //                   else
- //                   {
- //                       this.FileDrive.CreateEmptyFile(path, 0);
- //                   }
- //               }
- //           }
- //           else
- //           {
- //               var parts = PathResolver.SplitPath(path);
- //               if (parts.Count == 1)
- //               {
- //                   this.FileDrive.CreateShare(parts[0]);
- //               }
- //               else
- //               {
- //                   this.FileDrive.CreateFile(path, newItemValue.ToString());
- //               }
- //           }
- //       }
 
  //       public override void CopyItem(string path, string copyPath, bool recurse)
  //       {
@@ -193,22 +90,7 @@ namespace AzureStorageDrive
  //           }
  //       }
 
- //       public override void RemoveItem(string path, bool recurse)
- //       {
- //           var r = PathResolver.ResolvePath(this.FileDrive.Client, path, skipCheckExistence: false);
- //           switch (r.PathType)
- //           {
- //               case PathType.AzureFileDirectory:
-                    
- //                   this.FileDrive.DeleteDirectory(r.Directory, recurse);
- //                   break;
- //               case PathType.AzureFile:
- //                   r.File.Delete();
- //                   break;
- //               default:
- //                   break;
- //           }
- //       }
+
  //       #endregion
 
  //       #region ItemCmdlet
@@ -238,7 +120,7 @@ namespace AzureStorageDrive
 
  //           try
  //           {
- //               var r = PathResolver.ResolvePath(this.FileDrive.Client, path, skipCheckExistence: false);
+ //               var r = AzureFilePathResolver.ResolvePath(this.FileDrive.Client, path, skipCheckExistence: false);
  //               var exists = r.Exists();
  //               return exists;
  //           }
@@ -305,7 +187,7 @@ namespace AzureStorageDrive
 
  //           try
  //           {
- //               var r = PathResolver.ResolvePath(this.FileDrive.Client, path, hint: PathType.AzureFileDirectory, skipCheckExistence: false);
+ //               var r = AzureFilePathResolver.ResolvePath(this.FileDrive.Client, path, hint: PathType.AzureFileDirectory, skipCheckExistence: false);
  //               return r.Exists();
  //           }
  //           catch (Exception e)
@@ -395,7 +277,7 @@ namespace AzureStorageDrive
  //       #region IPropertyCmdletProvider
  //       public void GetProperty(string path, System.Collections.ObjectModel.Collection<string> providerSpecificPickList)
  //       {
- //           var r = PathResolver.ResolvePath(this.FileDrive.Client, path, skipCheckExistence: false);
+ //           var r = AzureFilePathResolver.ResolvePath(this.FileDrive.Client, path, skipCheckExistence: false);
  //           switch (r.PathType)
  //           {
  //               case PathType.AzureFile:
@@ -427,7 +309,7 @@ namespace AzureStorageDrive
 
  //       public void SetProperty(string path, PSObject propertyValue)
  //       {
- //           var r = PathResolver.ResolvePath(this.FileDrive.Client, path, skipCheckExistence: false);
+ //           var r = AzureFilePathResolver.ResolvePath(this.FileDrive.Client, path, skipCheckExistence: false);
  //           switch (r.PathType)
  //           {
  //               case PathType.AzureFile:
