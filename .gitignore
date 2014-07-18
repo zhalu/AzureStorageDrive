@@ -17,3 +17,4 @@
 /src/AzureStorageDrive/AzureStorageDrive.csproj.user
 /src/AzureStorageDrive/start.test.cmd
 /src/packages/AWSSDK.2.1.7.0
+/src/BlobClient/obj/Debug
