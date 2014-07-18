@@ -271,7 +271,7 @@ namespace AzureStorageDrive
         {
             if (path == this.PSDriveInfo.Root)
             {
-                return this.PSDriveInfo.Root;
+                return string.Empty;
             }
 
             var parts = PathResolver.SplitPath(path);
@@ -290,15 +290,15 @@ namespace AzureStorageDrive
                 return string.Empty;
             }
 
-            if (parts.Count <= 1)
+            if (parts.Count == 1)
             {
                 if (path.StartsWith(PathResolver.Root))
                 {
-                    return string.Empty;
+                    return PathResolver.Root;
                 }
                 else
                 {
-                    return PathResolver.Root;
+                    return string.Empty;
                 }
             }
 

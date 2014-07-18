@@ -75,13 +75,25 @@
     <Compile Include="AzureFileServiceProvider.cs" />
     <Compile Include="DriveInfo\DriveFactory.cs" />
     <Compile Include="GeniusDriveProvider.cs" />
+    <Compile Include="PathResolver\AzureBlobPathResolver.cs" />
     <Compile Include="PathResolver\AzureFilePathResolver.cs" />
+    <Compile Include="PathResolver\AzureBlobPathResolveResult.cs" />
     <Compile Include="PathResolver\PathResolver.cs" />
     <Compile Include="PathResolver\AzureFilePathResolveResult.cs" />
     <Compile Include="PathResolver\PathType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="config\AzureBlob.types.ps1xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="config\AzureBlob.format.ps1xml">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="config\general.format.ps1xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="config\AzureFile.types.ps1xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

@@ -9,7 +9,10 @@
         AzureFileDirectory,
         AzureFile,
 
-
+        AzureBlobRoot,
+        AzureBlobDirectory,
+        AzureBlobBlock,
+        AzureBlobPage,
 
         Invalid,
         Unknown

@@ -27,7 +27,7 @@ namespace AzureStorageDrive
             var accountKey = dict["key"];
 
             var cred = new StorageCredentials(accountName, accountKey);
-            var account = new CloudStorageAccount(cred, null, null, null, fileStorageUri: new StorageUri(new Uri(endpoint)));
+            var account = new CloudStorageAccount(cred, new StorageUri(new Uri(endpoint)), null, null, null);
             var client = account.CreateCloudBlobClient();
 
             this.Client = client;
@@ -40,82 +40,36 @@ namespace AzureStorageDrive
                             string type,
                             object newItemValue)
         {
-            if (string.Equals(type, "PageBlob", StringComparison.InvariantCultureIgnoreCase))
+            if (string.Equals(type, "Directory", StringComparison.InvariantCultureIgnoreCase))
             {
-                var bytes = Encoding.UTF8.GetBytes(newItemValue == null ? "" : newItemValue.ToString());
-                var size = EstimateSizeAlignedWith512(bytes);
-                var parts = PathResolver.SplitPath(path);
-                switch (parts.Count)
-                {
-                    case 0:
-                    case 1:
-                        return;
-                    default:
-                        break;
-                }
-
-                var containerName = parts[0];
-                var container = this.Client.GetContainerReference(containerName);
-                container.CreateIfNotExists();
-
-                var blob = container.GetPageBlobReference(PathResolver.GetSubpath(path));
-                blob.Create(size);
-
-                using (var stream = new MemoryStream(bytes)) {
-                    blob.WritePages(stream, 0);
-                }
+                this.CreateDirectory(path);
             }
-            else if (string.Equals(type, "EmptyPageBlob", StringComparison.InvariantCultureIgnoreCase))
+            else if (string.Equals(type, "EmptyFile", StringComparison.InvariantCultureIgnoreCase))
             {
-                var size = 0L;
-                if (newItemValue == null || !Int64.TryParse(newItemValue.ToString(), out size)) {
-                    throw new Exception("Value must be of type Long.");
+                if (newItemValue != null)
+                {
+                    var size = 0L;
+                    if (long.TryParse(newItemValue.ToString(), out size))
+                    {
+                        this.CreateEmptyFile(path, size);
+                    }
+                    else
+                    {
+                        this.CreateEmptyFile(path, 0);
+                    }
                 }
-
-                var parts = PathResolver.SplitPath(path);
-                switch (parts.Count) {
-                    case 0:
-                    case 1:
-                        return;
-                    default:
-                        break;
-                }
-
-                var containerName = parts[0];
-                var container = this.Client.GetContainerReference(containerName);
-                container.CreateIfNotExists();
-
-                var blob = container.GetPageBlobReference(PathResolver.GetSubpath(path));
-                blob.Create(size);
             }
             else
             {
-                //if BlockBlob
                 var parts = PathResolver.SplitPath(path);
                 if (parts.Count == 1)
                 {
-                    this.CreateShare(parts[0]);
+                    this.CreateContainer(parts[0]);
                 }
                 else
                 {
-                    this.CreateFile(path, newItemValue.ToString());
+                    this.CreateBlob(path, newItemValue.ToString());
                 }
-            }
-        }
-
-        private long EstimateSizeAlignedWith512(byte[] bytes)
-        {
-            var length = bytes.Length;
-            var multiplier = length / 512;
-
-            if (length % 512 == 0)
-            {
-                return length;
-            }
-            else
-            {
-                var size = 512 * multiplier + 512;
-                return size;
             }
         }
 
@@ -125,25 +79,25 @@ namespace AzureStorageDrive
 
             var items = this.ListItems(path);
             this.HandleItems(items,
-                (f) =>
+                (b) =>
                 {
-                    this.RootProvider.WriteItemObject(f, path, true);
+                    this.RootProvider.WriteItemObject(b, path, true);
                 },
                 (d) =>
                 {
                     this.RootProvider.WriteItemObject(d, path, true);
                     if (recurse)
                     {
-                        var p = PathResolver.Combine(path, d.Name);
+                        var p = PathResolver.Combine(path, d.Prefix);
                         folders.Add(p);
                     }
                 },
-                (s) =>
+                (c) =>
                 {
-                    this.RootProvider.WriteItemObject(s, path, true);
+                    this.RootProvider.WriteItemObject(c, path, true);
                     if (recurse)
                     {
-                        var p = PathResolver.Combine(path, s.Name);
+                        var p = PathResolver.Combine(path, c.Name);
                         folders.Add(p);
                     }
                 });
@@ -159,26 +113,23 @@ namespace AzureStorageDrive
 
         public override void GetChildNames(string path, ReturnContainers returnContainers)
         {
-            var r = AzureFilePathResolver.ResolvePath(this.Client, path);
+            var r = AzureBlobPathResolver.ResolvePath(this.Client, path);
             switch (r.PathType)
             {
-                case PathType.AzureFileRoot:
+                case PathType.AzureBlobRoot:
                     var shares = this.ListItems(path);
-                    foreach (CloudFileShare s in shares)
+                    foreach (CloudBlobContainer s in shares)
                     {
                         this.RootProvider.WriteItemObject(s.Name, path, true);
                     }
                     break;
-                case PathType.AzureFileDirectory:
-                    var items = r.Directory.ListFilesAndDirectories();
-                    var parentPath = PathResolver.Combine(r.Parts);
-                    this.HandleItems(items,
-                        (f) => this.RootProvider.WriteItemObject(f.Name, PathResolver.Root, false),
-                        (d) => this.RootProvider.WriteItemObject(d.Name, PathResolver.Root, true),
-                        (s) => { }
+                case PathType.AzureBlobDirectory:
+                    ListAndHandle(r.Directory,
+                        blobAction: b => this.RootProvider.WriteItemObject(b.Name, b.Parent.Uri.ToString(), false),
+                        dirAction: d => this.RootProvider.WriteItemObject(d.Prefix, d.Parent.Uri.ToString(), false)
                         );
                     break;
-                case PathType.AzureFile:
+                case PathType.AzureBlobBlock:
                 default:
                     break;
             }
@@ -186,14 +137,14 @@ namespace AzureStorageDrive
 
         public override void RemoveItem(string path, bool recurse)
         {
-            var r = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+            var r = AzureBlobPathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
             switch (r.PathType)
             {
-                case PathType.AzureFileDirectory:
+                case PathType.AzureBlobDirectory:
                     this.DeleteDirectory(r.Directory, recurse);
                     break;
-                case PathType.AzureFile:
-                    r.File.Delete();
+                case PathType.AzureBlobBlock:
+                    r.Blob.Delete();
                     break;
                 default:
                     break;
@@ -202,118 +153,132 @@ namespace AzureStorageDrive
 
         internal IEnumerable<object> ListItems(string path)
         {
-            var result = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+            var result = AzureBlobPathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
 
             switch (result.PathType)
             {
-                case PathType.AzureFileRoot:
-                    return ListShares(this.Client);
-                case PathType.AzureFileDirectory:
+                case PathType.AzureBlobRoot:
+                    return ListContainers(this.Client);
+                case PathType.AzureBlobDirectory:
                     return ListDirectory(result.Directory);
-                case PathType.AzureFile:
-                    return ListFile(result.File);
+                case PathType.AzureBlobBlock:
+                    return ListBlob(result.Blob);
                 default:
                     return null;
             }
         }
 
-        private IEnumerable<object> ListShares(CloudFileClient client)
+        private IEnumerable<object> ListContainers(CloudBlobClient client)
         {
-            return client.ListShares();
+            return client.ListContainers();
         }
 
-        public void HandleItems(IEnumerable<object> items, Action<CloudFile> fileAction, Action<CloudFileDirectory> dirAction, Action<CloudFileShare> shareAction)
+        public bool IsDirEmpty(CloudBlobDirectory dir)
         {
+            var r = dir.ListBlobsSegmented(true, BlobListingDetails.None, 1, null, null, null);
+            return r.Results.Count() == 0;
+        }
+
+        public void ListAndHandle(CloudBlobDirectory dir, 
+            bool flatBlobListing = false,
+            Action<ICloudBlob> blobAction = null, 
+            Action<CloudBlobDirectory> dirAction = null,
+            Action<CloudBlobContainer> containerAction = null)
+        {
+            BlobContinuationToken token = null;
+            while (true)
+            {
+                var r = dir.ListBlobsSegmented(flatBlobListing, BlobListingDetails.None, 10, token, null, null);
+                token = r.ContinuationToken;
+                var blobs = r.Results;
+                this.HandleItems(blobs, blobAction, dirAction, containerAction);
+
+                if (token == null)
+                {
+                    break;
+                }
+            }
+        }
+
+        public void HandleItems(IEnumerable<object> items, 
+            Action<ICloudBlob> blobAction = null, 
+            Action<CloudBlobDirectory> dirAction = null, 
+            Action<CloudBlobContainer> containerAction = null)
+        {
+            if (items == null)
+            {
+                return;
+            }
+
             foreach (var i in items)
             {
-                var d = i as CloudFileDirectory;
+                var d = i as CloudBlobDirectory;
                 if (d != null)
                 {
                     dirAction(d);
                     continue;
                 }
 
-                var f = i as CloudFile;
+                var f = i as ICloudBlob;
                 if (f != null)
                 {
-                    fileAction(f);
+                    blobAction(f);
                     continue;
                 }
 
-                var s = i as CloudFileShare;
+                var s = i as CloudBlobContainer;
                 if (s != null)
                 {
-                    shareAction(s);
+                    containerAction(s);
                     continue;
                 }
             }
         }
 
-        private IEnumerable<IListFileItem> ListFile(CloudFile file)
+        private IEnumerable<IListBlobItem> ListBlob(ICloudBlob file)
         {
-            return new IListFileItem[] { file };
+            return new IListBlobItem[] { file };
         }
 
-        private IEnumerable<IListFileItem> ListDirectory(CloudFileDirectory dir)
+        private IEnumerable<object> ListDirectory(CloudBlobDirectory dir)
         {
-            var list = dir.ListFilesAndDirectories().ToList();
+            var list = new List<object>();
+            ListAndHandle(dir,
+                blobAction: b => list.Add(b),
+                dirAction: d => list.Add(d));
             return list;
         }
 
         internal void CreateDirectory(string path)
         {
-            var r = AzureFilePathResolver.ResolvePath(this.Client, path);
+            var r = AzureBlobPathResolver.ResolvePath(this.Client, path);
 
             switch (r.PathType)
             {
-                case PathType.AzureFileRoot:
+                case PathType.AzureBlobRoot:
                     return;
-                case PathType.AzureFileDirectory:
-                    CreateDirectoryAndShare(r.Directory);
+                case PathType.AzureBlobDirectory:
+                    CreateContainer(r.Directory);
                     return;
-                case PathType.AzureFile:
+                case PathType.AzureBlobBlock:
                     throw new Exception("File " + path + " already exists.");
                 default:
                     return;
             }
         }
 
-        internal void CreateDirectoryAndShare(CloudFileDirectory dir)
+        internal void CreateContainer(CloudBlobDirectory dir)
         {
-            var share = dir.Share;
-            if (!share.Exists())
+            var container = dir.Container;
+            if (!container.Exists())
             {
-                share.Create();
+                container.Create();
             }
-
-            CreateParentDirectory(dir, share.GetRootDirectoryReference());
-            if (!dir.Exists())
-            {
-                dir.Create();
-            }
-        }
-
-        private void CreateParentDirectory(CloudFileDirectory dir, CloudFileDirectory rootDir)
-        {
-            var p = dir.Parent;
-            if (p == null || p.Uri == rootDir.Uri)
-            {
-                return;
-            }
-
-            if (p.Exists())
-            {
-                return;
-            }
-
-            CreateParentDirectory(p, rootDir);
-
-            p.Create();
         }
 
         internal void CreateEmptyFile(string path, long size)
         {
-            var file = GetFile(path);
+            var file = GetBlob(path, PathType.AzureBlobPage) as CloudPageBlob;
             if (file == null)
             {
                 throw new Exception("Path " + path + " is not a valid file path.");
@@ -322,115 +287,101 @@ namespace AzureStorageDrive
             file.Create(size);
         }
 
-        internal void CreateFile(string path, string content)
+        internal void CreateBlob(string path, string content)
         {
-            var file = GetFile(path);
+            var file = GetBlob(path, PathType.AzureBlobBlock) as CloudBlockBlob;
             if (file == null)
             {
                 throw new Exception("Path " + path + " is not a valid file path.");
             }
 
-            CreateDirectoryAndShare(file.Parent);
+            CreateContainer(file.Parent);
             file.UploadText(content);
         }
 
         public override IContentReader GetContentReader(string path)
         {
-            var r = AzureFilePathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFile, skipCheckExistence: false);
-            if (r.PathType == PathType.AzureFile)
+            var r = AzureBlobPathResolver.ResolvePath(this.Client, path, hint: PathType.AzureBlobBlock, skipCheckExistence: false);
+            if (r.PathType == PathType.AzureBlobBlock)
             {
-                var reader = new AzureFileReader(GetFile(path));
+                var reader = new AzureBlobReader(GetBlob(path, PathType.Unknown));
                 return reader;
             }
 
             return null;
         }
 
-        public CloudFile GetFile(string path)
+        public ICloudBlob GetBlob(string path, PathType expectedType)
         {
-            var r = AzureFilePathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFile);
-            if (r.PathType == PathType.AzureFile)
+            var r = AzureBlobPathResolver.ResolvePath(this.Client, path, hint: expectedType);
+            if (r.PathType == expectedType)
             {
-                return r.File;
+                return r.Blob;
             }
 
             return null;
         }
 
-        internal void DeleteDirectory(CloudFileDirectory dir, bool recurse)
+        internal void DeleteDirectory(CloudBlobDirectory dir, bool recurse)
         {
-            if (dir.Share.GetRootDirectoryReference().Uri == dir.Uri)
-            {
-                dir.Share.Delete();
-                return;
-            }
-
-            var items = dir.ListFilesAndDirectories();
             if (recurse)
             {
-                HandleItems(items,
-                    (f) => f.Delete(),
-                    (d) => DeleteDirectory(d, recurse),
-                    (s) => s.Delete());
-
-                dir.Delete();
+                ListAndHandle(dir,
+                    flatBlobListing: true,
+                    blobAction: (b) => b.Delete());
             }
             else
             {
-                if (items.Count() == 0)
-                {
-                    dir.Delete();
-                }
-                else
+                if (!IsDirEmpty(dir))
                 {
                     throw new Exception("The directory is not empty. Please specify -recurse to delete it.");
                 }
             }
         }
 
-        internal CloudFileShare CreateShare(string shareName)
+        internal CloudBlobContainer CreateContainer(string containerName)
         {
-            var share = this.Client.GetShareReference(shareName);
-            if (!share.Exists())
+            var container = this.Client.GetContainerReference(containerName);
+            if (!container.Exists())
             {
-                share.Create();
-                return share;
+                container.Create();
+                return container;
             }
 
-            throw new Exception("Share " + shareName + " already exists");
+            throw new Exception("Container " + containerName + " already exists");
         }
 
         internal void Download(string path, string destination)
         {
-            var r = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+            var r = AzureBlobPathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
             var targetIsDir = Directory.Exists(destination);
 
             switch (r.PathType)
             {
-                case PathType.AzureFile:
+                case PathType.AzureBlobBlock:
                     if (targetIsDir)
                     {
                         destination = PathResolver.Combine(destination, r.Parts.Last());
                     }
 
-                    r.File.DownloadToFile(destination, FileMode.CreateNew);
+                    r.Blob.DownloadToFile(destination, FileMode.CreateNew);
                     break;
-                case PathType.AzureFileDirectory:
-                    if (string.IsNullOrEmpty(r.Directory.Name))
+                case PathType.AzureBlobDirectory:
+                    if (r.Directory == r.RootDirectory)
                     {
-                        //at share level
-                        this.DownloadShare(r.Share, destination);
+                        //at container level
+                        this.DownloadContainer(r.Container, destination);
                     }
                     else
                     {
                         DownloadDirectory(r.Directory, destination);
                     }
                     break;
-                case PathType.AzureFileRoot:
-                    var shares = this.Client.ListShares();
+                case PathType.AzureBlobRoot:
+                    var shares = this.Client.ListContainers();
                     foreach (var share in shares)
                     {
-                        this.DownloadShare(share, destination);
+                        this.DownloadContainer(share, destination);
                     }
                     break;
                 default:
@@ -438,55 +389,41 @@ namespace AzureStorageDrive
             }
         }
 
-        private void DownloadShare(CloudFileShare share, string destination)
+        private void DownloadContainer(CloudBlobContainer container, string destination)
         {
-            destination = PathResolver.Combine(destination, share.Name);
+            destination = PathResolver.Combine(destination, container.Name);
             Directory.CreateDirectory(destination);
 
-            var dir = share.GetRootDirectoryReference();
-            var items = dir.ListFilesAndDirectories();
-
-            this.HandleItems(items,
-                (f) =>
-                {
-                    f.DownloadToFile(PathResolver.Combine(destination, f.Name), FileMode.CreateNew);
-                },
-                (d) =>
-                {
-                    DownloadDirectory(d, destination);
-                },
-                (s) => { });
+            var dir = container.GetDirectoryReference("");
+            ListAndHandle(dir,
+                flatBlobListing: false,
+                blobAction: (b) => b.DownloadToFile(PathResolver.Combine(destination, b.Name), FileMode.CreateNew),
+                dirAction: (d) => DownloadDirectory(d, destination));
         }
 
-        internal void DownloadDirectory(CloudFileDirectory dir, string destination)
+        internal void DownloadDirectory(CloudBlobDirectory dir, string destination)
         {
-            destination = Path.Combine(destination, dir.Name);
+            destination = Path.Combine(destination, dir.Prefix);
             Directory.CreateDirectory(destination);
-            var items = dir.ListFilesAndDirectories();
-            this.HandleItems(items,
-                (f) =>
-                {
-                    f.DownloadToFile(PathResolver.Combine(destination, f.Name), FileMode.CreateNew);
-                },
-                (d) =>
-                {
-                    DownloadDirectory(d, destination);
-                },
-                (s) => { });
+
+            ListAndHandle(dir,
+                flatBlobListing: false,
+                blobAction: (b) => b.DownloadToFile(PathResolver.Combine(destination, b.Name), FileMode.CreateNew),
+                dirAction: (d) => DownloadDirectory(d, destination));
         }
 
         internal void Upload(string localPath, string targePath)
         {
-            var r = AzureFilePathResolver.ResolvePath(this.Client, targePath, skipCheckExistence: false);
+            var r = AzureBlobPathResolver.ResolvePath(this.Client, targePath, skipCheckExistence: false);
             var localIsDirectory = Directory.Exists(localPath);
             var local = PathResolver.SplitPath(localPath);
             switch (r.PathType)
             {
-                case PathType.AzureFileRoot:
+                case PathType.AzureBlobRoot:
                     if (localIsDirectory)
                     {
-                        var share = CreateShare(local.Last());
-                        var dir = share.GetRootDirectoryReference();
+                        var container = CreateContainer(local.Last());
+                        var dir = container.GetDirectoryReference("");
                         foreach (var f in Directory.GetFiles(localPath))
                         {
                             UploadFile(f, dir);
@@ -502,7 +439,7 @@ namespace AzureStorageDrive
                         throw new Exception("Cannot upload file as file share.");
                     }
                     break;
-                case PathType.AzureFileDirectory:
+                case PathType.AzureBlobDirectory:
                     if (localIsDirectory)
                     {
                         UploadDirectory(localPath, r.Directory);
@@ -512,18 +449,17 @@ namespace AzureStorageDrive
                         UploadFile(localPath, r.Directory);
                     }
                     break;
-                case PathType.AzureFile:
+                case PathType.AzureBlobBlock:
                 default:
                     break;
             }
 
         }
 
-        private void UploadDirectory(string localPath, CloudFileDirectory dir)
+        private void UploadDirectory(string localPath, CloudBlobDirectory dir)
         {
             var localDirName = Path.GetFileName(localPath);
             var subdir = dir.GetDirectoryReference(localDirName);
-            subdir.Create();
 
             foreach (var f in Directory.GetFiles(localPath))
             {
@@ -536,17 +472,17 @@ namespace AzureStorageDrive
             }
         }
 
-        private void UploadFile(string localFile, CloudFileDirectory dir)
+        private void UploadFile(string localFile, CloudBlobDirectory dir)
         {
             var file = Path.GetFileName(localFile);
-            var f = dir.GetFileReference(file);
+            var f = dir.GetBlockBlobReference(file);
             var condition = new AccessCondition();
             f.UploadFromFile(localFile, FileMode.CreateNew);
         }
 
         public override bool HasChildItems(string path)
         {
-            var r = AzureFilePathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFileDirectory, skipCheckExistence: false);
+            var r = AzureBlobPathResolver.ResolvePath(this.Client, path, hint: PathType.AzureBlobDirectory, skipCheckExistence: false);
             return r.Exists();
         }
 
@@ -565,7 +501,7 @@ namespace AzureStorageDrive
 
             try
             {
-                var r = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+                var r = AzureBlobPathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
                 var exists = r.Exists();
                 return exists;
             }
@@ -590,7 +526,7 @@ namespace AzureStorageDrive
 
             try
             {
-                var r = AzureFilePathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFileDirectory, skipCheckExistence: false);
+                var r = AzureBlobPathResolver.ResolvePath(this.Client, path, hint: PathType.AzureBlobDirectory, skipCheckExistence: false);
                 return r.Exists();
             }
             catch (Exception e)
@@ -601,25 +537,24 @@ namespace AzureStorageDrive
 
         public override void GetProperty(string path, System.Collections.ObjectModel.Collection<string> providerSpecificPickList)
         {
-            var r = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+            var r = AzureBlobPathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
             switch (r.PathType)
             {
-                case PathType.AzureFile:
-                    r.File.FetchAttributes();
-                    this.RootProvider.WriteItemObject(r.File.Properties, path, false);
-                    this.RootProvider.WriteItemObject(r.File.Metadata, path, false);
+                case PathType.AzureBlobBlock:
+                    r.Blob.FetchAttributes();
+                    this.RootProvider.WriteItemObject(r.Blob.Properties, path, false);
+                    this.RootProvider.WriteItemObject(r.Blob.Metadata, path, false);
                     break;
-                case PathType.AzureFileDirectory:
-                    if (r.Parts.Count() == 1)
+                case PathType.AzureBlobDirectory:
+                    if (r.Directory == r.RootDirectory)
                     {
-                        r.Share.FetchAttributes();
-                        this.RootProvider.WriteItemObject(r.Share.Properties, path, true);
-                        this.RootProvider.WriteItemObject(r.Share.Metadata, path, true);
+                        r.Container.FetchAttributes();
+                        this.RootProvider.WriteItemObject(r.Container.Properties, path, true);
+                        this.RootProvider.WriteItemObject(r.Container.Metadata, path, true);
                     }
                     else
                     {
-                        r.Directory.FetchAttributes();
-                        this.RootProvider.WriteItemObject(r.Directory.Properties, path, true);
+                        //none to show
                     }
                     break;
                 default:
@@ -629,20 +564,20 @@ namespace AzureStorageDrive
 
         public override void SetProperty(string path, PSObject propertyValue)
         {
-            var r = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+            var r = AzureBlobPathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
             switch (r.PathType)
             {
-                case PathType.AzureFile:
-                    r.File.FetchAttributes();
-                    MergeProperties(r.File.Metadata, propertyValue.Properties);
-                    r.File.SetMetadata();
+                case PathType.AzureBlobBlock:
+                    r.Blob.FetchAttributes();
+                    MergeProperties(r.Blob.Metadata, propertyValue.Properties);
+                    r.Blob.SetMetadata();
                     break;
-                case PathType.AzureFileDirectory:
+                case PathType.AzureBlobDirectory:
                     if (r.Parts.Count() == 1)
                     {
-                        r.Share.FetchAttributes();
-                        MergeProperties(r.Share.Metadata, propertyValue.Properties);
-                        r.Share.SetMetadata();
+                        r.Container.FetchAttributes();
+                        MergeProperties(r.Container.Metadata, propertyValue.Properties);
+                        r.Container.SetMetadata();
                     }
                     else
                     {
@@ -669,13 +604,13 @@ namespace AzureStorageDrive
         }
     }
 
-    class AzureFileReader : IContentReader
+    class AzureBlobReader : IContentReader
     {
-        private CloudFile File { get; set; }
+        private ICloudBlob File { get; set; }
         private long length = 0;
         private long offset = 0;
         private const int unit = 80;
-        public AzureFileReader(CloudFile file)
+        public AzureBlobReader(ICloudBlob file)
         {
             this.File = file;
             this.File.FetchAttributes();

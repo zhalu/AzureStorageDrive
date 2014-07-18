@@ -3,12 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace AzureStorageDrive
 {
     public class AzureFilePathResolver : PathResolver
     {
+        private const string SharePattern = @"^[a-z0-9][a-z0-9-]{2,}$";
+        private const string FilePattern = @"^[^*/]+";
         public static AzureFilePathResolveResult ResolvePath(CloudFileClient client, string path, PathType hint = PathType.Unknown, bool skipCheckExistence = true)
         {
             var result = new AzureFilePathResolveResult();
@@ -87,5 +90,27 @@ namespace AzureStorageDrive
             return result;
         }
 
+        public static bool ValidatePath(List<string> parts)
+        {
+            if (parts.Count == 0)
+            {
+                return true;
+            }
+
+            if (!Regex.Match(parts[0], SharePattern).Success)
+            {
+                return false;
+            }
+
+            for (var i = 1; i < parts.Count; ++i)
+            {
+                if (!Regex.Match(parts[i], FilePattern).Success)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

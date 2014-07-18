@@ -17,6 +17,9 @@ namespace AzureStorageDrive
                 case "azurefile":
                     var d = new AzureFileServiceDriveInfo(value as string, name);
                     return d;
+                case "azureblob":
+                    var b = new AzureBlobServiceDriveInfo(value as string, name);
+                    return b;
                 default:
                     return null;
                     
