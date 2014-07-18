@@ -12,9 +12,9 @@ namespace AzureStorageDrive
     {
         private const string SharePattern = @"^[a-z0-9][a-z0-9-]{2,}$";
         private const string FilePatter = @"^[^*/]+";
-        public const string PathSeparator = "\\";
-        public const string AlternatePathSeparator = "/";
-        public const string Root = "\\";
+        public const string PathSeparator = "/";
+        public const string AlternatePathSeparator = "\\";
+        public const string Root = "/";
 
         public static Dictionary<string, AbstractDriveInfo> Drives = new Dictionary<string, AbstractDriveInfo>();
 

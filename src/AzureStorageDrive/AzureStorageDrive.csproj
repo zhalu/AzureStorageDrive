@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DriveInfo\AbstractDriveInfo.cs" />
+    <Compile Include="DriveInfo\AzureBlobServiceDriveInfo.cs" />
     <Compile Include="DriveInfo\AzureFileServiceDriveInfo.cs" />
     <Compile Include="AzureFileServiceProvider.cs" />
     <Compile Include="DriveInfo\DriveFactory.cs" />

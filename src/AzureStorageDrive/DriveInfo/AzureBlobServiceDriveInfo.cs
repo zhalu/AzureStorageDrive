@@ -1,0 +1,734 @@
+﻿using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Auth;
+using Microsoft.WindowsAzure.Storage.Blob;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Management.Automation;
+using System.Management.Automation.Provider;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace AzureStorageDrive
+{
+    public class AzureBlobServiceDriveInfo : AbstractDriveInfo
+    {
+        public CloudBlobClient Client { get; set; }
+        public string Endpoint { get; set; }
+        public string Name { get; set; }
+
+        public AzureBlobServiceDriveInfo(string url, string name)
+        {
+            var parts = url.Split('?');
+            var endpoint = parts[0];
+            var dict = ParseValues(parts[1]);
+            var accountName = dict["account"];
+            var accountKey = dict["key"];
+
+            var cred = new StorageCredentials(accountName, accountKey);
+            var account = new CloudStorageAccount(cred, null, null, null, fileStorageUri: new StorageUri(new Uri(endpoint)));
+            var client = account.CreateCloudBlobClient();
+
+            this.Client = client;
+            this.Endpoint = endpoint;
+            this.Name = name;
+        }
+
+        public override void NewItem(
+                            string path,
+                            string type,
+                            object newItemValue)
+        {
+            if (string.Equals(type, "PageBlob", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var bytes = Encoding.UTF8.GetBytes(newItemValue == null ? "" : newItemValue.ToString());
+                var size = EstimateSizeAlignedWith512(bytes);
+                var parts = PathResolver.SplitPath(path);
+                switch (parts.Count)
+                {
+                    case 0:
+                    case 1:
+                        return;
+                    default:
+                        break;
+                }
+
+                var containerName = parts[0];
+                var container = this.Client.GetContainerReference(containerName);
+                container.CreateIfNotExists();
+
+                var blob = container.GetPageBlobReference(PathResolver.GetSubpath(path));
+                blob.Create(size);
+
+                using (var stream = new MemoryStream(bytes)) {
+                    blob.WritePages(stream, 0);
+                }
+            }
+            else if (string.Equals(type, "EmptyPageBlob", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var size = 0L;
+                if (newItemValue == null || !Int64.TryParse(newItemValue.ToString(), out size)) {
+                    throw new Exception("Value must be of type Long.");
+                }
+
+                var parts = PathResolver.SplitPath(path);
+                switch (parts.Count) {
+                    case 0:
+                    case 1:
+                        return;
+                    default:
+                        break;
+                }
+
+                var containerName = parts[0];
+                var container = this.Client.GetContainerReference(containerName);
+                container.CreateIfNotExists();
+
+                var blob = container.GetPageBlobReference(PathResolver.GetSubpath(path));
+                blob.Create(size);
+            }
+            else
+            {
+                //if BlockBlob
+                var parts = PathResolver.SplitPath(path);
+                if (parts.Count == 1)
+                {
+                    this.CreateShare(parts[0]);
+                }
+                else
+                {
+                    this.CreateFile(path, newItemValue.ToString());
+                }
+            }
+        }
+
+        private long EstimateSizeAlignedWith512(byte[] bytes)
+        {
+            var length = bytes.Length;
+            var multiplier = length / 512;
+
+            if (length % 512 == 0)
+            {
+                return length;
+            }
+            else
+            {
+                var size = 512 * multiplier + 512;
+                return size;
+            }
+        }
+
+        public override void GetChildItems(string path, bool recurse)
+        {
+            var folders = recurse ? new List<string>() : null;
+
+            var items = this.ListItems(path);
+            this.HandleItems(items,
+                (f) =>
+                {
+                    this.RootProvider.WriteItemObject(f, path, true);
+                },
+                (d) =>
+                {
+                    this.RootProvider.WriteItemObject(d, path, true);
+                    if (recurse)
+                    {
+                        var p = PathResolver.Combine(path, d.Name);
+                        folders.Add(p);
+                    }
+                },
+                (s) =>
+                {
+                    this.RootProvider.WriteItemObject(s, path, true);
+                    if (recurse)
+                    {
+                        var p = PathResolver.Combine(path, s.Name);
+                        folders.Add(p);
+                    }
+                });
+
+            if (recurse && folders != null)
+            {
+                foreach (var f in folders)
+                {
+                    GetChildItems(f, recurse);
+                }
+            }
+        }
+
+        public override void GetChildNames(string path, ReturnContainers returnContainers)
+        {
+            var r = AzureFilePathResolver.ResolvePath(this.Client, path);
+            switch (r.PathType)
+            {
+                case PathType.AzureFileRoot:
+                    var shares = this.ListItems(path);
+                    foreach (CloudFileShare s in shares)
+                    {
+                        this.RootProvider.WriteItemObject(s.Name, path, true);
+                    }
+                    break;
+                case PathType.AzureFileDirectory:
+                    var items = r.Directory.ListFilesAndDirectories();
+                    var parentPath = PathResolver.Combine(r.Parts);
+                    this.HandleItems(items,
+                        (f) => this.RootProvider.WriteItemObject(f.Name, PathResolver.Root, false),
+                        (d) => this.RootProvider.WriteItemObject(d.Name, PathResolver.Root, true),
+                        (s) => { }
+                        );
+                    break;
+                case PathType.AzureFile:
+                default:
+                    break;
+            }
+        }
+
+        public override void RemoveItem(string path, bool recurse)
+        {
+            var r = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+            switch (r.PathType)
+            {
+                case PathType.AzureFileDirectory:
+                    this.DeleteDirectory(r.Directory, recurse);
+                    break;
+                case PathType.AzureFile:
+                    r.File.Delete();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        internal IEnumerable<object> ListItems(string path)
+        {
+            var result = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+
+            switch (result.PathType)
+            {
+                case PathType.AzureFileRoot:
+                    return ListShares(this.Client);
+                case PathType.AzureFileDirectory:
+                    return ListDirectory(result.Directory);
+                case PathType.AzureFile:
+                    return ListFile(result.File);
+                default:
+                    return null;
+            }
+        }
+
+        private IEnumerable<object> ListShares(CloudFileClient client)
+        {
+            return client.ListShares();
+        }
+
+        public void HandleItems(IEnumerable<object> items, Action<CloudFile> fileAction, Action<CloudFileDirectory> dirAction, Action<CloudFileShare> shareAction)
+        {
+            foreach (var i in items)
+            {
+                var d = i as CloudFileDirectory;
+                if (d != null)
+                {
+                    dirAction(d);
+                    continue;
+                }
+
+                var f = i as CloudFile;
+                if (f != null)
+                {
+                    fileAction(f);
+                    continue;
+                }
+
+                var s = i as CloudFileShare;
+                if (s != null)
+                {
+                    shareAction(s);
+                    continue;
+                }
+            }
+        }
+
+        private IEnumerable<IListFileItem> ListFile(CloudFile file)
+        {
+            return new IListFileItem[] { file };
+        }
+
+        private IEnumerable<IListFileItem> ListDirectory(CloudFileDirectory dir)
+        {
+            var list = dir.ListFilesAndDirectories().ToList();
+            return list;
+        }
+
+        internal void CreateDirectory(string path)
+        {
+            var r = AzureFilePathResolver.ResolvePath(this.Client, path);
+
+            switch (r.PathType)
+            {
+                case PathType.AzureFileRoot:
+                    return;
+                case PathType.AzureFileDirectory:
+                    CreateDirectoryAndShare(r.Directory);
+                    return;
+                case PathType.AzureFile:
+                    throw new Exception("File " + path + " already exists.");
+                default:
+                    return;
+            }
+        }
+
+        internal void CreateDirectoryAndShare(CloudFileDirectory dir)
+        {
+            var share = dir.Share;
+            if (!share.Exists())
+            {
+                share.Create();
+            }
+
+            CreateParentDirectory(dir, share.GetRootDirectoryReference());
+            if (!dir.Exists())
+            {
+                dir.Create();
+            }
+        }
+
+        private void CreateParentDirectory(CloudFileDirectory dir, CloudFileDirectory rootDir)
+        {
+            var p = dir.Parent;
+            if (p == null || p.Uri == rootDir.Uri)
+            {
+                return;
+            }
+
+            if (p.Exists())
+            {
+                return;
+            }
+
+            CreateParentDirectory(p, rootDir);
+
+            p.Create();
+        }
+
+        internal void CreateEmptyFile(string path, long size)
+        {
+            var file = GetFile(path);
+            if (file == null)
+            {
+                throw new Exception("Path " + path + " is not a valid file path.");
+            }
+
+            file.Create(size);
+        }
+
+        internal void CreateFile(string path, string content)
+        {
+            var file = GetFile(path);
+            if (file == null)
+            {
+                throw new Exception("Path " + path + " is not a valid file path.");
+            }
+
+            CreateDirectoryAndShare(file.Parent);
+            file.UploadText(content);
+        }
+
+        public override IContentReader GetContentReader(string path)
+        {
+            var r = AzureFilePathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFile, skipCheckExistence: false);
+            if (r.PathType == PathType.AzureFile)
+            {
+                var reader = new AzureFileReader(GetFile(path));
+                return reader;
+            }
+
+            return null;
+        }
+
+        public CloudFile GetFile(string path)
+        {
+            var r = AzureFilePathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFile);
+            if (r.PathType == PathType.AzureFile)
+            {
+                return r.File;
+            }
+
+            return null;
+        }
+
+        internal void DeleteDirectory(CloudFileDirectory dir, bool recurse)
+        {
+            if (dir.Share.GetRootDirectoryReference().Uri == dir.Uri)
+            {
+                dir.Share.Delete();
+                return;
+            }
+
+            var items = dir.ListFilesAndDirectories();
+            if (recurse)
+            {
+                HandleItems(items,
+                    (f) => f.Delete(),
+                    (d) => DeleteDirectory(d, recurse),
+                    (s) => s.Delete());
+
+                dir.Delete();
+            }
+            else
+            {
+                if (items.Count() == 0)
+                {
+                    dir.Delete();
+                }
+                else
+                {
+                    throw new Exception("The directory is not empty. Please specify -recurse to delete it.");
+                }
+            }
+        }
+
+        internal CloudFileShare CreateShare(string shareName)
+        {
+            var share = this.Client.GetShareReference(shareName);
+            if (!share.Exists())
+            {
+                share.Create();
+                return share;
+            }
+
+            throw new Exception("Share " + shareName + " already exists");
+        }
+
+        internal void Download(string path, string destination)
+        {
+            var r = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+            var targetIsDir = Directory.Exists(destination);
+
+            switch (r.PathType)
+            {
+                case PathType.AzureFile:
+                    if (targetIsDir)
+                    {
+                        destination = PathResolver.Combine(destination, r.Parts.Last());
+                    }
+
+                    r.File.DownloadToFile(destination, FileMode.CreateNew);
+                    break;
+                case PathType.AzureFileDirectory:
+                    if (string.IsNullOrEmpty(r.Directory.Name))
+                    {
+                        //at share level
+                        this.DownloadShare(r.Share, destination);
+                    }
+                    else
+                    {
+                        DownloadDirectory(r.Directory, destination);
+                    }
+                    break;
+                case PathType.AzureFileRoot:
+                    var shares = this.Client.ListShares();
+                    foreach (var share in shares)
+                    {
+                        this.DownloadShare(share, destination);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void DownloadShare(CloudFileShare share, string destination)
+        {
+            destination = PathResolver.Combine(destination, share.Name);
+            Directory.CreateDirectory(destination);
+
+            var dir = share.GetRootDirectoryReference();
+            var items = dir.ListFilesAndDirectories();
+
+            this.HandleItems(items,
+                (f) =>
+                {
+                    f.DownloadToFile(PathResolver.Combine(destination, f.Name), FileMode.CreateNew);
+                },
+                (d) =>
+                {
+                    DownloadDirectory(d, destination);
+                },
+                (s) => { });
+        }
+
+        internal void DownloadDirectory(CloudFileDirectory dir, string destination)
+        {
+            destination = Path.Combine(destination, dir.Name);
+            Directory.CreateDirectory(destination);
+            var items = dir.ListFilesAndDirectories();
+            this.HandleItems(items,
+                (f) =>
+                {
+                    f.DownloadToFile(PathResolver.Combine(destination, f.Name), FileMode.CreateNew);
+                },
+                (d) =>
+                {
+                    DownloadDirectory(d, destination);
+                },
+                (s) => { });
+        }
+
+        internal void Upload(string localPath, string targePath)
+        {
+            var r = AzureFilePathResolver.ResolvePath(this.Client, targePath, skipCheckExistence: false);
+            var localIsDirectory = Directory.Exists(localPath);
+            var local = PathResolver.SplitPath(localPath);
+            switch (r.PathType)
+            {
+                case PathType.AzureFileRoot:
+                    if (localIsDirectory)
+                    {
+                        var share = CreateShare(local.Last());
+                        var dir = share.GetRootDirectoryReference();
+                        foreach (var f in Directory.GetFiles(localPath))
+                        {
+                            UploadFile(f, dir);
+                        }
+
+                        foreach (var d in Directory.GetDirectories(localPath))
+                        {
+                            UploadDirectory(d, dir);
+                        }
+                    }
+                    else
+                    {
+                        throw new Exception("Cannot upload file as file share.");
+                    }
+                    break;
+                case PathType.AzureFileDirectory:
+                    if (localIsDirectory)
+                    {
+                        UploadDirectory(localPath, r.Directory);
+                    }
+                    else
+                    {
+                        UploadFile(localPath, r.Directory);
+                    }
+                    break;
+                case PathType.AzureFile:
+                default:
+                    break;
+            }
+
+        }
+
+        private void UploadDirectory(string localPath, CloudFileDirectory dir)
+        {
+            var localDirName = Path.GetFileName(localPath);
+            var subdir = dir.GetDirectoryReference(localDirName);
+            subdir.Create();
+
+            foreach (var f in Directory.GetFiles(localPath))
+            {
+                UploadFile(f, subdir);
+            }
+
+            foreach (var d in Directory.GetDirectories(localPath))
+            {
+                UploadDirectory(d, subdir);
+            }
+        }
+
+        private void UploadFile(string localFile, CloudFileDirectory dir)
+        {
+            var file = Path.GetFileName(localFile);
+            var f = dir.GetFileReference(file);
+            var condition = new AccessCondition();
+            f.UploadFromFile(localFile, FileMode.CreateNew);
+        }
+
+        public override bool HasChildItems(string path)
+        {
+            var r = AzureFilePathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFileDirectory, skipCheckExistence: false);
+            return r.Exists();
+        }
+
+        public override bool IsValidPath(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override bool ItemExists(string path)
+        {
+            if (PathResolver.IsLocalPath(path))
+            {
+                path = PathResolver.ConvertToRealLocalPath(path);
+                return File.Exists(path) || Directory.Exists(path);
+            }
+
+            try
+            {
+                var r = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+                var exists = r.Exists();
+                return exists;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
+
+        public override bool IsItemContainer(string path)
+        {
+            if (PathResolver.IsLocalPath(path))
+            {
+                return true;
+            }
+
+            var parts = PathResolver.SplitPath(path);
+            if (parts.Count == 0)
+            {
+                return true;
+            }
+
+            try
+            {
+                var r = AzureFilePathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFileDirectory, skipCheckExistence: false);
+                return r.Exists();
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+        }
+
+        public override void GetProperty(string path, System.Collections.ObjectModel.Collection<string> providerSpecificPickList)
+        {
+            var r = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+            switch (r.PathType)
+            {
+                case PathType.AzureFile:
+                    r.File.FetchAttributes();
+                    this.RootProvider.WriteItemObject(r.File.Properties, path, false);
+                    this.RootProvider.WriteItemObject(r.File.Metadata, path, false);
+                    break;
+                case PathType.AzureFileDirectory:
+                    if (r.Parts.Count() == 1)
+                    {
+                        r.Share.FetchAttributes();
+                        this.RootProvider.WriteItemObject(r.Share.Properties, path, true);
+                        this.RootProvider.WriteItemObject(r.Share.Metadata, path, true);
+                    }
+                    else
+                    {
+                        r.Directory.FetchAttributes();
+                        this.RootProvider.WriteItemObject(r.Directory.Properties, path, true);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        public override void SetProperty(string path, PSObject propertyValue)
+        {
+            var r = AzureFilePathResolver.ResolvePath(this.Client, path, skipCheckExistence: false);
+            switch (r.PathType)
+            {
+                case PathType.AzureFile:
+                    r.File.FetchAttributes();
+                    MergeProperties(r.File.Metadata, propertyValue.Properties);
+                    r.File.SetMetadata();
+                    break;
+                case PathType.AzureFileDirectory:
+                    if (r.Parts.Count() == 1)
+                    {
+                        r.Share.FetchAttributes();
+                        MergeProperties(r.Share.Metadata, propertyValue.Properties);
+                        r.Share.SetMetadata();
+                    }
+                    else
+                    {
+                        throw new Exception("Setting metadata/properties for directory is not supported");
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void MergeProperties(IDictionary<string, string> target, PSMemberInfoCollection<PSPropertyInfo> source)
+        {
+            foreach (var info in source)
+            {
+                var name = info.Name;
+                if (target.ContainsKey(name))
+                {
+                    target.Remove(name);
+                }
+
+                target.Add(name, info.Value.ToString());
+            }
+        }
+    }
+
+    class AzureFileReader : IContentReader
+    {
+        private CloudFile File { get; set; }
+        private long length = 0;
+        private long offset = 0;
+        private const int unit = 80;
+        public AzureFileReader(CloudFile file)
+        {
+            this.File = file;
+            this.File.FetchAttributes();
+            length = this.File.Properties.Length;
+        }
+        public void Close()
+        {
+        }
+
+        public System.Collections.IList Read(long readCount)
+        {
+            var total = readCount * unit;
+            if (offset >= length)
+            {
+                return null;
+            }
+
+            if (offset + total >= length)
+            {
+                total = length - offset;
+            }
+
+            var b = new byte[total];
+            this.File.DownloadRangeToByteArray(b, 0, offset, total);
+            offset += total;
+
+            var l = new List<string>();
+            var fullparts = (int)Math.Floor(total * 1.0 / unit);
+            for (var i = 0; i < fullparts; ++i)
+            {
+                var s = Encoding.UTF8.GetString(b, i * unit, unit);
+
+                l.Add(s);
+            }
+
+            //last part
+            if (total > unit * fullparts)
+            {
+                var s = Encoding.UTF8.GetString(b, fullparts * unit, (int)(total - unit * fullparts));
+                l.Add(s);
+            }
+
+            return l;
+
+        }
+
+        public void Seek(long offset, System.IO.SeekOrigin origin)
+        {
+            this.offset = (int)offset;
+        }
+
+        public void Dispose()
+        {
+        }
+    }
+}
