@@ -46,10 +46,10 @@ namespace AzureStorageDrive
                 {
                     //assume it's directory
                     var dir = result.Directory.GetDirectoryReference(parts[level]);
-                    if (result.PathType == PathType.AzureFileDirectory)
+                    if (result.PathType == PathType.AzureBlobDirectory)
                     {
                         result.Directory = dir;
-                        result.PathType = PathType.AzureFileDirectory;
+                        result.PathType = PathType.AzureBlobDirectory;
                         continue;
                     }
                 }
@@ -61,7 +61,7 @@ namespace AzureStorageDrive
                     {
                         //assume it's directory first
                         var dir = result.Directory.GetDirectoryReference(parts.Last());
-                        if (result.PathType == PathType.AzureFileDirectory 
+                        if (result.PathType == PathType.AzureBlobDirectory 
                             && (skipCheckExistence || dir.ListBlobsSegmented(false, BlobListingDetails.None, 1, null, null, null).Results.Count() > 0))
                         {
                             result.Directory = dir;

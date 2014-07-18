@@ -49,7 +49,7 @@
                 <ScriptBlock>$_.Length</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>$_.Name</ScriptBlock>
+                <ScriptBlock>$_.DisplayName</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>$_.BlobType</ScriptBlock>

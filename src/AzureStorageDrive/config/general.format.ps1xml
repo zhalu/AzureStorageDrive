@@ -7,10 +7,6 @@
         <TypeName>AzureStorageDrive.AzureBlobServiceDriveInfo</TypeName>
         <TypeName>AzureStorageDrive.AzureFileServiceDriveInfo</TypeName>
       </ViewSelectedBy>
-      <GroupBy>
-        <ScriptBlock>$_.Type</ScriptBlock>
-        <Label>Service</Label>
-      </GroupBy>
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>

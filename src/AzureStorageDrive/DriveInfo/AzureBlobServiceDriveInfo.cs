@@ -88,7 +88,8 @@ namespace AzureStorageDrive
                     this.RootProvider.WriteItemObject(d, path, true);
                     if (recurse)
                     {
-                        var p = PathResolver.Combine(path, d.Prefix);
+                        var name = PathResolver.SplitPath(d.Prefix).Last();
+                        var p = PathResolver.Combine(path, name);
                         folders.Add(p);
                     }
                 },
