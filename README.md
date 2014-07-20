@@ -1,10 +1,10 @@
 GeniusDrive
 ====================
 
-"Mount" an Azure Storage File service just like a native disk in PowerShell. You can access it anywhere outside the data center.
+"Mount" an Azure Storage File/Blob service just like a native disk in PowerShell. You can access it anywhere outside the data center, and copy files around.
 
 
-Will add Azure Blob / AWS S3 service support soon.
+Will add AWS S3 service support soon.
 
 Usage
 -----
@@ -23,6 +23,7 @@ In your other PowerShell session, you can follow these steps:
 >2. `New-PSDrive -name <DriveLabelToMountAt, e.g. x> -psprovider GeniusDrive -root /;`
 >3. `<DriveLabelToMountAt, e.g. x>:`
 >4. `ni <mountedLabel> -type AzureFile -value http://<account>.file.core.windows.net/?account=<account>&key=<key>`
+>5. `ni <mountedLabel> -type AzureBlob -value http://<account>.blob.core.windows.net/?account=<account>&key=<key>`
 
 Supported Operations
 --------------------
