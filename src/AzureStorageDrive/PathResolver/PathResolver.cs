@@ -17,8 +17,6 @@ namespace AzureStorageDrive
 
         public static Dictionary<string, AbstractDriveInfo> Drives = new Dictionary<string, AbstractDriveInfo>();
 
-        
-
         public static List<string> SplitPath(string path)
         {
             var list = new List<string>();

@@ -603,6 +603,23 @@ namespace AzureStorageDrive
                 target.Add(name, info.Value.ToString());
             }
         }
+
+        #region Data copy 
+        public bool CopyItem(string localPath, AzureBlobServiceDriveInfo targetDrive, string targetPath, bool recurse)
+        {
+            return false;
+        }
+
+        public bool CopyItem(AzureBlobServiceDriveInfo drive, string source, string localPath, bool recurse)
+        {
+            return false;
+        }
+
+        public bool CopyItem(AzureBlobServiceDriveInfo sourceDrive, string sourcePath, AzureFileServiceDriveInfo targetDrive, string targetPath, bool recurse)
+        {
+            return false;
+        }
+        #endregion
     }
 
     class AzureBlobReader : IContentReader

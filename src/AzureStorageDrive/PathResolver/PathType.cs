@@ -3,7 +3,6 @@
     public enum PathType
     {
         Root,
-        ProviderRoot,
 
         AzureFileRoot,
         AzureFileDirectory,
@@ -13,6 +12,10 @@
         AzureBlobDirectory,
         AzureBlobBlock,
         AzureBlobPage,
+
+        AwsS3Root,
+        AwsS3Directory,
+        AwsS3File,
 
         Invalid,
         Unknown

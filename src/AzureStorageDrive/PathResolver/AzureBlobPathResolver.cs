@@ -55,44 +55,41 @@ namespace AzureStorageDrive
                 }
 
                 //last element
-                if (parts.Count > 1)
+                if (hint == PathType.AzureBlobDirectory || hint == PathType.Unknown)
                 {
-                    if (hint == PathType.AzureBlobDirectory || hint == PathType.Unknown)
+                    //assume it's directory first
+                    var dir = result.Directory.GetDirectoryReference(parts.Last());
+                    if (result.PathType == PathType.AzureBlobDirectory 
+                        && (skipCheckExistence || dir.ListBlobsSegmented(false, BlobListingDetails.None, 1, null, null, null).Results.Count() > 0))
                     {
-                        //assume it's directory first
-                        var dir = result.Directory.GetDirectoryReference(parts.Last());
-                        if (result.PathType == PathType.AzureBlobDirectory 
-                            && (skipCheckExistence || dir.ListBlobsSegmented(false, BlobListingDetails.None, 1, null, null, null).Results.Count() > 0))
-                        {
-                            result.Directory = dir;
-                            result.PathType = PathType.AzureBlobDirectory;
-                            return result;
-                        }
-
+                        result.Directory = dir;
+                        result.PathType = PathType.AzureBlobDirectory;
+                        return result;
                     }
 
-                    //2. assume it's a block blob
-                    if (hint == PathType.AzureBlobBlock || hint == PathType.Unknown)
-                    {
-                        var blob = result.Directory.GetBlockBlobReference(parts.Last());
-                        if (result.PathType == PathType.AzureBlobDirectory && (skipCheckExistence || blob != null))
-                        {
-                            result.Blob = blob as ICloudBlob;
-                            result.PathType = PathType.AzureBlobBlock;
-                            return result;
-                        }
-                    }
+                }
 
-                    //3. assume it's a page blob
-                    if (hint == PathType.AzureBlobPage || hint == PathType.Unknown)
+                //2. assume it's a block blob
+                if (hint == PathType.AzureBlobBlock || hint == PathType.Unknown)
+                {
+                    var blob = result.Directory.GetBlockBlobReference(parts.Last());
+                    if (result.PathType == PathType.AzureBlobDirectory && (skipCheckExistence || blob != null))
                     {
-                        var blob = result.Directory.GetPageBlobReference(parts.Last());
-                        if (result.PathType == PathType.AzureBlobDirectory && (skipCheckExistence || blob != null))
-                        {
-                            result.Blob = blob as ICloudBlob;
-                            result.PathType = PathType.AzureBlobPage;
-                            return result;
-                        }
+                        result.Blob = blob as ICloudBlob;
+                        result.PathType = PathType.AzureBlobBlock;
+                        return result;
+                    }
+                }
+
+                //3. assume it's a page blob
+                if (hint == PathType.AzureBlobPage || hint == PathType.Unknown)
+                {
+                    var blob = result.Directory.GetPageBlobReference(parts.Last());
+                    if (result.PathType == PathType.AzureBlobDirectory && (skipCheckExistence || blob != null))
+                    {
+                        result.Blob = blob as ICloudBlob;
+                        result.PathType = PathType.AzureBlobPage;
+                        return result;
                     }
                 }
 

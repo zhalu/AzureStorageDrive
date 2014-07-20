@@ -158,7 +158,78 @@ namespace AzureStorageDrive
 
         protected override void CopyItem(string path, string copyPath, bool recurse)
         {
-            throw new NotImplementedException();
+            var sourceIsLocal = PathResolver.IsLocalPath(path);
+            var targetIsLocal = PathResolver.IsLocalPath(copyPath);
+
+            if (sourceIsLocal && !targetIsLocal)
+            {
+                var parts = PathResolver.SplitPath(copyPath);
+                if (parts.Count == 0)
+                {
+                    return;
+                }
+
+                //if the provider is not mounted, then return
+                dynamic drive = GetDrive(parts[0]);
+                if (drive == null)
+                {
+                    return;
+                }
+
+                drive.CopyItem(PathResolver.ConvertToRealLocalPath(path), drive, copyPath, recurse);
+            } 
+            else if (!sourceIsLocal && targetIsLocal)
+            {
+                var parts = PathResolver.SplitPath(path);
+                if (parts.Count == 0)
+                {
+                    return;
+                }
+
+                //if the provider is not mounted, then return
+                dynamic drive = GetDrive(parts[0]);
+                if (drive == null)
+                {
+                    return;
+                }
+
+                drive.CopyItem(drive, path, PathResolver.ConvertToRealLocalPath(copyPath), recurse);
+            }
+            else if (!sourceIsLocal && !targetIsLocal)
+            {
+                var parts = PathResolver.SplitPath(path);
+                if (parts.Count == 0)
+                {
+                    return;
+                }
+
+                //if the provider is not mounted, then return
+                dynamic drive = GetDrive(parts[0]);
+                if (drive == null)
+                {
+                    return;
+                }
+
+                var parts2 = PathResolver.SplitPath(copyPath);
+                if (parts2.Count == 0)
+                {
+                    return;
+                }
+
+                //if the provider is not mounted, then return
+                dynamic drive2 = GetDrive(parts2[0]);
+                if (drive2 == null)
+                {
+                    return;
+                }
+
+                drive.CopyItem(drive, path, drive2, copyPath, recurse);
+            }
+            else if (sourceIsLocal && targetIsLocal)
+            {
+                //copy local to local
+                //give me a break
+            }
         }
 
         protected override void RemoveItem(string path, bool recurse)

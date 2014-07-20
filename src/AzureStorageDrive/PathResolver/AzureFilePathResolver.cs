@@ -51,31 +51,28 @@ namespace AzureStorageDrive
                 }
 
                 //last element
-                if (parts.Count > 1)
+                if (hint == PathType.AzureFileDirectory || hint == PathType.Unknown)
                 {
-                    if (hint == PathType.AzureFileDirectory || hint == PathType.Unknown)
+                    //assume it's directory first
+                    var dir = result.Directory.GetDirectoryReference(parts.Last());
+                    if (result.PathType == PathType.AzureFileDirectory && (skipCheckExistence || dir.Exists()))
                     {
-                        //assume it's directory first
-                        var dir = result.Directory.GetDirectoryReference(parts.Last());
-                        if (result.PathType == PathType.AzureFileDirectory && (skipCheckExistence || dir.Exists()))
-                        {
-                            result.Directory = dir;
-                            result.PathType = PathType.AzureFileDirectory;
-                            return result;
-                        }
-
+                        result.Directory = dir;
+                        result.PathType = PathType.AzureFileDirectory;
+                        return result;
                     }
 
-                    //2. assume it's a file
-                    if (hint == PathType.AzureFile || hint == PathType.Unknown)
+                }
+
+                //2. assume it's a file
+                if (hint == PathType.AzureFile || hint == PathType.Unknown)
+                {
+                    var file = result.Directory.GetFileReference(parts.Last());
+                    if (result.PathType == PathType.AzureFileDirectory && (skipCheckExistence || file.Exists()))
                     {
-                        var file = result.Directory.GetFileReference(parts.Last());
-                        if (result.PathType == PathType.AzureFileDirectory && (skipCheckExistence || file.Exists()))
-                        {
-                            result.File = file;
-                            result.PathType = PathType.AzureFile;
-                            return result;
-                        }
+                        result.File = file;
+                        result.PathType = PathType.AzureFile;
+                        return result;
                     }
                 }
 
