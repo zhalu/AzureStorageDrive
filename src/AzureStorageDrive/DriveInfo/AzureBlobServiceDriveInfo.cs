@@ -1,4 +1,5 @@
-﻿using Microsoft.WindowsAzure.Storage;
+﻿using AzureStorageDrive.CopyJob;
+using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
 using Microsoft.WindowsAzure.Storage.Blob;
 using System;
@@ -303,9 +304,9 @@ namespace AzureStorageDrive
         public override IContentReader GetContentReader(string path)
         {
             var r = AzureBlobPathResolver.ResolvePath(this.Client, path, hint: PathType.AzureBlobBlock, skipCheckExistence: false);
-            if (r.PathType == PathType.AzureBlobBlock)
+            if (r.PathType == PathType.AzureBlobBlock || r.PathType == PathType.AzureBlobPage)
             {
-                var reader = new AzureBlobReader(GetBlob(path, PathType.Unknown));
+                var reader = new AzureBlobReader(GetBlob(path, r.PathType));
                 return reader;
             }
 
@@ -604,38 +605,16 @@ namespace AzureStorageDrive
             }
         }
 
-        #region Data copy 
-        public void CopyItem(string localPath, AzureBlobServiceDriveInfo targetDrive, string targetPath, bool recurse, bool deleteSource = false)
-        {
-        }
-
-        public void CopyItem(AzureBlobServiceDriveInfo drive, string source, string localPath, bool recurse, bool deleteSource = false)
-        {
-        }
-
-        public void CopyItem(AzureBlobServiceDriveInfo sourceDrive, string sourcePath, AzureFileServiceDriveInfo targetDrive, string targetPath, bool recurse, bool deleteSource = false)
-        {
-        }
-
-        public void CopyItem(AzureBlobServiceDriveInfo sourceDrive, string sourcePath, AzureBlobServiceDriveInfo targetDrive, string targetPath, bool recurse, bool deleteSource = false)
-        {
-            if (deleteSource && sourceDrive == targetDrive)
-            {
-                //renamed the file is enough
-                var source = AzureBlobPathResolver.ResolvePath(sourceDrive.Client, sourcePath, skipCheckExistence: false);
-                var target = AzureBlobPathResolver.ResolvePath(sourceDrive.Client, targetPath);
-            }
-        }
-        #endregion
-
         public override CopyJob.ICopySource GetCopySource(string path)
         {
-            throw new NotImplementedException();
+            var s = new AzureBlobCopySource(this, path);
+            return s;
         }
 
         public override CopyJob.ICopyTarget GetCopyTarget(string path)
         {
-            throw new NotImplementedException();
+            var t = new AzureBlobCopyTarget(this, path);
+            return t;
         }
     }
 
@@ -676,7 +655,7 @@ namespace AzureStorageDrive
             var fullparts = (int)Math.Floor(total * 1.0 / unit);
             for (var i = 0; i < fullparts; ++i)
             {
-                var s = Encoding.UTF8.GetString(b, i * unit, unit);
+                var s = Encoding.ASCII.GetString(b, i * unit, unit);
 
                 l.Add(s);
             }
@@ -684,7 +663,7 @@ namespace AzureStorageDrive
             //last part
             if (total > unit * fullparts)
             {
-                var s = Encoding.UTF8.GetString(b, fullparts * unit, (int)(total - unit * fullparts));
+                var s = Encoding.ASCII.GetString(b, fullparts * unit, (int)(total - unit * fullparts));
                 l.Add(s);
             }
 

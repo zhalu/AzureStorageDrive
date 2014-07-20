@@ -622,24 +622,7 @@ namespace AzureStorageDrive
                 target.Add(name, info.Value.ToString());
             }
         }
-
-        #region Data copy
-        public void CopyItem(string localPath, AzureFileServiceDriveInfo targetDrive, string targetPath, bool recurse, bool deleteSource = false)
-        {
-        }
-
-        public void CopyItem(AzureFileServiceDriveInfo drive, string source, string localPath, bool recurse, bool deleteSource = false)
-        {
-        }
-
-        public void CopyItem(AzureFileServiceDriveInfo sourceDrive, string sourcePath, AzureBlobServiceDriveInfo targetDrive, string targetPath, bool recurse, bool deleteSource = false)
-        {
-        }
-        public void CopyItem(AzureFileServiceDriveInfo sourceDrive, string sourcePath, AzureFileServiceDriveInfo targetDrive, string targetPath, bool recurse, bool deleteSource = false)
-        {
-        }
-        #endregion
-
+        
         public override ICopyTarget GetCopyTarget(string path)
         {
             var t = new AzureFileCopyTarget(this, path);
