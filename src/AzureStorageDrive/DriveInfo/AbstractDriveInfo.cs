@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AzureStorageDrive.CopyJob;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace AzureStorageDrive
 {
-    public abstract class AbstractDriveInfo
+    public abstract class AbstractDriveInfo : ICopyableSource, ICopyableTarget
     {
         public CmdletProvider RootProvider { get; set; }
         public string Name { get; set; }
@@ -42,5 +43,9 @@ namespace AzureStorageDrive
 
             return dict;
         }
+
+        public abstract ICopySource GetCopySource(string path);
+
+        public abstract ICopyTarget GetCopyTarget(string path);
     }
 }

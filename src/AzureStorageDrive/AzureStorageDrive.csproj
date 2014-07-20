@@ -69,6 +69,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CopyJob\AzureFileCopySource.cs" />
+    <Compile Include="CopyJob\AzureFileCopyTarget.cs" />
+    <Compile Include="CopyJob\ICopyableSource.cs" />
+    <Compile Include="CopyJob\ICopyableTarget.cs" />
+    <Compile Include="CopyJob\ICopySource.cs" />
+    <Compile Include="CopyJob\ICopyTarget.cs" />
+    <Compile Include="CopyJob\LocalCopyTarget.cs" />
+    <Compile Include="CopyJob\LocalCopySource.cs" />
     <Compile Include="DriveInfo\AbstractDriveInfo.cs" />
     <Compile Include="DriveInfo\AwsS3ServiceDriveInfo.cs" />
     <Compile Include="DriveInfo\AzureBlobServiceDriveInfo.cs" />
@@ -86,6 +94,7 @@
     <Compile Include="PathResolver\PathType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\AwsS3Util.cs" />
+    <Compile Include="Util\Constants.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config\AzureBlob.types.ps1xml">

@@ -605,21 +605,38 @@ namespace AzureStorageDrive
         }
 
         #region Data copy 
-        public bool CopyItem(string localPath, AzureBlobServiceDriveInfo targetDrive, string targetPath, bool recurse)
+        public void CopyItem(string localPath, AzureBlobServiceDriveInfo targetDrive, string targetPath, bool recurse, bool deleteSource = false)
         {
-            return false;
         }
 
-        public bool CopyItem(AzureBlobServiceDriveInfo drive, string source, string localPath, bool recurse)
+        public void CopyItem(AzureBlobServiceDriveInfo drive, string source, string localPath, bool recurse, bool deleteSource = false)
         {
-            return false;
         }
 
-        public bool CopyItem(AzureBlobServiceDriveInfo sourceDrive, string sourcePath, AzureFileServiceDriveInfo targetDrive, string targetPath, bool recurse)
+        public void CopyItem(AzureBlobServiceDriveInfo sourceDrive, string sourcePath, AzureFileServiceDriveInfo targetDrive, string targetPath, bool recurse, bool deleteSource = false)
         {
-            return false;
+        }
+
+        public void CopyItem(AzureBlobServiceDriveInfo sourceDrive, string sourcePath, AzureBlobServiceDriveInfo targetDrive, string targetPath, bool recurse, bool deleteSource = false)
+        {
+            if (deleteSource && sourceDrive == targetDrive)
+            {
+                //renamed the file is enough
+                var source = AzureBlobPathResolver.ResolvePath(sourceDrive.Client, sourcePath, skipCheckExistence: false);
+                var target = AzureBlobPathResolver.ResolvePath(sourceDrive.Client, targetPath);
+            }
         }
         #endregion
+
+        public override CopyJob.ICopySource GetCopySource(string path)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override CopyJob.ICopyTarget GetCopyTarget(string path)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     class AzureBlobReader : IContentReader

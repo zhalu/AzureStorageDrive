@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AzureStorageDrive.CopyJob;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
@@ -158,11 +159,45 @@ namespace AzureStorageDrive
 
         protected override void CopyItem(string path, string copyPath, bool recurse)
         {
+            Copy(path, copyPath, recurse, false);
+        }
+
+        private void Copy(string path, string copyPath, bool recurse, bool deleteSource = false)
+        {
             var sourceIsLocal = PathResolver.IsLocalPath(path);
             var targetIsLocal = PathResolver.IsLocalPath(copyPath);
 
-            if (sourceIsLocal && !targetIsLocal)
+            ICopySource source = null;
+            ICopyTarget target = null;
+
+            if (sourceIsLocal) 
             {
+                source = new LocalCopySource() 
+                {
+                    LocalPath = PathResolver.ConvertToRealLocalPath(path)
+                };
+            } 
+            else 
+            {
+                var parts = PathResolver.SplitPath(path);
+                if (parts.Count == 0)
+                {
+                    return;
+                }
+
+                //if the provider is not mounted, then return
+                var drive = GetDrive(parts[0]);
+                if (drive == null)
+                {
+                    return;
+                }
+
+               source = drive.GetCopySource(PathResolver.GetSubpath(path));
+            }
+
+            if (targetIsLocal) {
+                target = new LocalCopyTarget(PathResolver.ConvertToRealLocalPath(copyPath));
+            } else {
                 var parts = PathResolver.SplitPath(copyPath);
                 if (parts.Count == 0)
                 {
@@ -170,66 +205,21 @@ namespace AzureStorageDrive
                 }
 
                 //if the provider is not mounted, then return
-                dynamic drive = GetDrive(parts[0]);
+                var drive = GetDrive(parts[0]);
                 if (drive == null)
                 {
                     return;
                 }
 
-                drive.CopyItem(PathResolver.ConvertToRealLocalPath(path), drive, copyPath, recurse);
-            } 
-            else if (!sourceIsLocal && targetIsLocal)
-            {
-                var parts = PathResolver.SplitPath(path);
-                if (parts.Count == 0)
-                {
-                    return;
-                }
-
-                //if the provider is not mounted, then return
-                dynamic drive = GetDrive(parts[0]);
-                if (drive == null)
-                {
-                    return;
-                }
-
-                drive.CopyItem(drive, path, PathResolver.ConvertToRealLocalPath(copyPath), recurse);
+                target = drive.GetCopyTarget(PathResolver.GetSubpath(copyPath));
             }
-            else if (!sourceIsLocal && !targetIsLocal)
+
+            if (sourceIsLocal && targetIsLocal)
             {
-                var parts = PathResolver.SplitPath(path);
-                if (parts.Count == 0)
-                {
-                    return;
-                }
-
-                //if the provider is not mounted, then return
-                dynamic drive = GetDrive(parts[0]);
-                if (drive == null)
-                {
-                    return;
-                }
-
-                var parts2 = PathResolver.SplitPath(copyPath);
-                if (parts2.Count == 0)
-                {
-                    return;
-                }
-
-                //if the provider is not mounted, then return
-                dynamic drive2 = GetDrive(parts2[0]);
-                if (drive2 == null)
-                {
-                    return;
-                }
-
-                drive.CopyItem(drive, path, drive2, copyPath, recurse);
+                throw new NotSupportedException();
             }
-            else if (sourceIsLocal && targetIsLocal)
-            {
-                //copy local to local
-                //give me a break
-            }
+
+            source.CopyTo(target, recurse, deleteSource);
         }
 
         protected override void RemoveItem(string path, bool recurse)
@@ -294,6 +284,11 @@ namespace AzureStorageDrive
 
         protected override bool ItemExists(string path)
         {
+            if (PathResolver.IsLocalPath(path))
+            {
+                return true;
+            }
+
             var parts = PathResolver.SplitPath(path);
             if (parts.Count == 0)
             {
