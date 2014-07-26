@@ -143,9 +143,18 @@ namespace AzureStorageDrive
             switch (r.PathType)
             {
                 case PathType.AzureBlobDirectory:
+                    if (r.Parts.Count == 1)
+                    {
+                        r.Container.Delete();
+                        return;
+                    }
+
                     this.DeleteDirectory(r.Directory, recurse);
                     break;
                 case PathType.AzureBlobBlock:
+                    r.Blob.Delete();
+                    break;
+                case PathType.AzureBlobPage:
                     r.Blob.Delete();
                     break;
                 default:

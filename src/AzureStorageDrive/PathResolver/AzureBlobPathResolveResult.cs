@@ -25,6 +25,12 @@ namespace AzureStorageDrive
                 case PathType.AzureBlobRoot:
                     return true;
                 case PathType.AzureBlobDirectory:
+                    if (this.Parts.Count == 1)
+                    {
+                        //check container
+                        return this.Container.Exists();
+                    }
+
                     return this.Directory.ListBlobsSegmented(true, BlobListingDetails.None, 1, null, null, null).Results.Count() > 0;
                 case PathType.AzureBlobBlock:
                 case PathType.AzureBlobPage:

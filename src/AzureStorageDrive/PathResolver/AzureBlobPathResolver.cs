@@ -73,11 +73,31 @@ namespace AzureStorageDrive
                 if (hint == PathType.AzureBlobBlock || hint == PathType.Unknown)
                 {
                     var blob = result.Directory.GetBlockBlobReference(parts.Last());
-                    if (result.PathType == PathType.AzureBlobDirectory && (skipCheckExistence || blob != null))
+                    if (result.PathType == PathType.AzureBlobDirectory)
                     {
-                        result.Blob = blob as ICloudBlob;
-                        result.PathType = PathType.AzureBlobBlock;
-                        return result;
+                        if (!skipCheckExistence)
+                        {
+                            try
+                            {
+                                var exists = blob.Exists(); //if blob is page blob, it will throw exception
+
+                                if (exists)
+                                {
+                                    result.Blob = blob as ICloudBlob;
+                                    result.PathType = PathType.AzureBlobBlock;
+                                    return result;
+                                }
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }
+                        else
+                        {
+                            result.Blob = blob as ICloudBlob;
+                            result.PathType = PathType.AzureBlobBlock;
+                            return result;
+                        }
                     }
                 }
 
@@ -85,11 +105,31 @@ namespace AzureStorageDrive
                 if (hint == PathType.AzureBlobPage || hint == PathType.Unknown)
                 {
                     var blob = result.Directory.GetPageBlobReference(parts.Last());
-                    if (result.PathType == PathType.AzureBlobDirectory && (skipCheckExistence || blob != null))
+                    if (result.PathType == PathType.AzureBlobDirectory)
                     {
-                        result.Blob = blob as ICloudBlob;
-                        result.PathType = PathType.AzureBlobPage;
-                        return result;
+                        if (!skipCheckExistence)
+                        {
+                            try
+                            {
+                                var exists = blob.Exists(); //if blob is block blob, it will throw exception
+
+                                if (exists)
+                                {
+                                    result.Blob = blob as ICloudBlob;
+                                    result.PathType = PathType.AzureBlobPage;
+                                    return result;
+                                }
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }
+                        else
+                        {
+                            result.Blob = blob as ICloudBlob;
+                            result.PathType = PathType.AzureBlobPage;
+                            return result;
+                        }
                     }
                 }
 
