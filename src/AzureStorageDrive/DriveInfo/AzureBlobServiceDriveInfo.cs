@@ -202,7 +202,7 @@ namespace AzureStorageDrive
                 var r = dir.ListBlobsSegmented(flatBlobListing, BlobListingDetails.None, 10, token, null, null);
                 token = r.ContinuationToken;
                 var blobs = r.Results;
-                this.HandleItems(blobs, blobAction, dirAction, containerAction);
+                this.HandleItems(blobs, blobAction, dirAction, containerAction, dir.Prefix);
 
                 if (token == null)
                 {
@@ -214,7 +214,8 @@ namespace AzureStorageDrive
         public void HandleItems(IEnumerable<object> items, 
             Action<ICloudBlob> blobAction = null, 
             Action<CloudBlobDirectory> dirAction = null, 
-            Action<CloudBlobContainer> containerAction = null)
+            Action<CloudBlobContainer> containerAction = null,
+            string excludedName = null)
         {
             if (items == null)
             {
@@ -233,7 +234,10 @@ namespace AzureStorageDrive
                 var f = i as ICloudBlob;
                 if (f != null)
                 {
-                    blobAction(f);
+                    if (f.Name != excludedName)
+                    {
+                        blobAction(f);
+                    }
                     continue;
                 }
 
