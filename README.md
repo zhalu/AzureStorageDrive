@@ -15,13 +15,17 @@ For quickstart:
 
 >1. In bin folder, edit `start.cmd` with your storage account name/key. This is one-off operation.
 >2. Run `start.cmd`, and a new window will be opened at the genius drive, e.g. x:\. And your file service is mounted at x:\f
->3. You can mount more Azure File account with: `ni <mountedLabel> -type AzureFile -value http://<account>.file.core.windows.net/?account=<account>&key=<key>`
+>3. You can mount more Azure File account with: 
+  `ni <mountedLabel> -type AzureFile -value http://<account>.file.core.windows.net/?account=<account>&key=<key>`
+  or Azure Blob account with:
+  `ni <mountedLabel> -type AzureBlob -value http://<account>.blob.core.windows.net/?account=<account>&key=<key>`
+  
 
 In your other PowerShell session, you can follow these steps:
 
 >1. `import-module <path>\GeniusDrive.psd1`
 >2. `New-PSDrive -name <DriveLabelToMountAt, e.g. x> -psprovider GeniusDrive -root /;`
->3. `<DriveLabelToMountAt, e.g. x>:`
+>3. `cd <DriveLabelToMountAt, e.g. x>:`
 >4. `ni <mountedLabel> -type AzureFile -value http://<account>.file.core.windows.net/?account=<account>&key=<key>`
 >5. `ni <mountedLabel> -type AzureBlob -value http://<account>.blob.core.windows.net/?account=<account>&key=<key>`
 
