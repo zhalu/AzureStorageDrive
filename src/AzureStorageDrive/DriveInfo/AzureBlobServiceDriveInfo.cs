@@ -65,7 +65,7 @@ namespace AzureStorageDrive
                 var parts = PathResolver.SplitPath(path);
                 if (parts.Count == 1)
                 {
-                    this.CreateContainer(parts[0]);
+                    this.CreateContainerIfNotExists(parts[0]);
                 }
                 else
                 {
@@ -262,29 +262,27 @@ namespace AzureStorageDrive
 
         internal void CreateDirectory(string path)
         {
-            var r = AzureBlobPathResolver.ResolvePath(this.Client, path);
+            var parts = PathResolver.SplitPath(path);
 
-            switch (r.PathType)
+            
+            if (parts.Count > 0)
             {
-                case PathType.AzureBlobRoot:
-                    return;
-                case PathType.AzureBlobDirectory:
-                    CreateContainer(r.Directory);
-                    return;
-                case PathType.AzureBlobBlock:
-                    throw new Exception("File " + path + " already exists.");
-                default:
-                    return;
+                var container = CreateContainerIfNotExists(parts[0]);
+                var dirObj = container.GetPageBlobReference(PathResolver.GetSubpath(path) + PathResolver.PathSeparator);
+
+                dirObj.Create(0);
             }
         }
 
-        internal void CreateContainer(CloudBlobDirectory dir)
+        internal CloudBlobContainer CreateContainerIfNotExists(string name)
         {
-            var container = dir.Container;
+            var container = this.Client.GetContainerReference(name);
             if (!container.Exists())
             {
                 container.Create();
             }
+
+            return container;
         }
 
         internal void CreateEmptyFile(string path, long size)
@@ -306,7 +304,7 @@ namespace AzureStorageDrive
                 throw new Exception("Path " + path + " is not a valid file path.");
             }
 
-            CreateContainer(file.Parent);
+            CreateContainerIfNotExists(file.Container.Name);
             file.UploadText(content);
         }
 
@@ -348,18 +346,6 @@ namespace AzureStorageDrive
                     throw new Exception("The directory is not empty. Please specify -recurse to delete it.");
                 }
             }
-        }
-
-        internal CloudBlobContainer CreateContainer(string containerName)
-        {
-            var container = this.Client.GetContainerReference(containerName);
-            if (!container.Exists())
-            {
-                container.Create();
-                return container;
-            }
-
-            throw new Exception("Container " + containerName + " already exists");
         }
 
         internal void Download(string path, string destination)
@@ -433,7 +419,7 @@ namespace AzureStorageDrive
                 case PathType.AzureBlobRoot:
                     if (localIsDirectory)
                     {
-                        var container = CreateContainer(local.Last());
+                        var container = CreateContainerIfNotExists(local.Last());
                         var dir = container.GetDirectoryReference("");
                         foreach (var f in Directory.GetFiles(localPath))
                         {
