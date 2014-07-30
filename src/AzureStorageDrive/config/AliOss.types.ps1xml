@@ -35,15 +35,15 @@
     <Members>
       <ScriptProperty>
         <Name>DirectoryTag</Name>
-        <GetScriptBlock>[string]::Empty</GetScriptBlock>
+        <GetScriptBlock>if ($_.Key.endsWith("/")) { "D" } else { [string]::Empty }</GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
         <Name>IsDirectory</Name>
-        <GetScriptBlock>$false</GetScriptBlock>
+        <GetScriptBlock>if ($_.Key.endsWith("/")) { $true } else { $false }</GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
         <Name>Length</Name>
-        <GetScriptBlock>$_.Size</GetScriptBlock>
+        <GetScriptBlock>if ($_.Key.endsWith("/")) { [string]::Empty } else { $_.Size }</GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
         <Name>Name</Name>
