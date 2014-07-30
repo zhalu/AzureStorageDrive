@@ -84,7 +84,6 @@ namespace AzureStorageDrive
                 case AliOssPathType.Bucket:
                 case AliOssPathType.Object:
                     List<object> objs = new List<object>();
-                    //objs.AddRange(ListGroups(result.Bucket, result.Prefix));
                     objs.AddRange(ListObjects(result.Bucket, result.Prefix));
                     return objs;
                 default:
@@ -152,7 +151,10 @@ namespace AzureStorageDrive
 
         public override bool HasChildItems(string path)
         {
-            throw new NotImplementedException();
+            /* TODO
+             * Check whether has child items in a effecient way
+             */
+            return true;
         }
 
         public override bool IsValidPath(string path)
@@ -212,23 +214,20 @@ namespace AzureStorageDrive
             var result = AliOssPathResolver.ResolvePath(path);
             switch (result.PathType)
             {
-                case AliOssPathType.Bucket:
+                case AliOssPathType.Root:
                     var buckets = ListBuckets();
                     foreach (Bucket b in buckets)
                     {
-                        this.RootProvider.WriteItemObject(b.Name, path, true);
+                        this.RootProvider.WriteItemObject(b.Name, PathResolver.Root, true);
                     }
                     break;
+                case AliOssPathType.Bucket:     
                 case AliOssPathType.Object:
-                    //var groups = ListGroups(result.Bucket, result.Prefix);
-                    //foreach (string g in groups)
-                    //{
-                    //    this.RootProvider.WriteItemObject(g, path, true);
-                    //}
                     var objects = ListObjects(result.Bucket, result.Prefix);
                     foreach (OssObjectSummary o in objects)
                     {
-                        this.RootProvider.WriteItemObject(o.Key, path, false);
+                        string[] parts = o.Key.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                        this.RootProvider.WriteItemObject(parts.Last(), path, o.Key.EndsWith("/"));
                     }   
                     break;
                 default:
