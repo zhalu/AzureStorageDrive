@@ -342,11 +342,6 @@ namespace AzureStorageDrive
                 ListAndHandle(dir,
                     flatBlobListing: true,
                     blobAction: (b) => b.Delete());
-
-                //query if directory blob exists, and delete it
-                var blobs = dir.ListBlobs();
-                HandleItems(blobs,
-                    blobAction: (b) => b.Delete());
             }
             else
             {

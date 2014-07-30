@@ -216,7 +216,6 @@ namespace AzureStorageDrive
 
             if (sourceIsLocal && targetIsLocal)
             {
-                //in theory, supported. But users have more efficient ways to achieve this, so block this behavior.
                 throw new NotSupportedException();
             }
 
