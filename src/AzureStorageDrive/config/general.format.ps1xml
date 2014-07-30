@@ -7,6 +7,7 @@
         <TypeName>AzureStorageDrive.AzureBlobServiceDriveInfo</TypeName>
         <TypeName>AzureStorageDrive.AzureFileServiceDriveInfo</TypeName>
         <TypeName>AzureStorageDrive.AliOssServiceDriveInfo</TypeName>
+        <TypeName>AzureStorageDrive.AwsS3ServiceDriveInfo</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>

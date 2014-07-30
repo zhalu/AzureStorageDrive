@@ -9,7 +9,7 @@
       </ScriptProperty>
       <ScriptProperty>
         <Name>Description</Name>
-        <GetScriptBlock>$_.AccountName</GetScriptBlock>
+        <GetScriptBlock>"AccessKeyId:" + $_.AccountName</GetScriptBlock>
       </ScriptProperty>
     </Members>
   </Type>

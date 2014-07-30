@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Types>
+  <Type>
+    <Name>AzureStorageDrive.AwsS3ServiceDriveInfo</Name>
+    <Members>
+      <ScriptProperty>
+        <Name>Type</Name>
+        <GetScriptBlock>"AWS S3"</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>Description</Name>
+        <GetScriptBlock>"AccessKeyId:" + $_.AccountName</GetScriptBlock>
+      </ScriptProperty>
+    </Members>
+  </Type>
+</Types>

@@ -20,9 +20,10 @@ namespace AzureStorageDrive
     public class AwsS3ServiceDriveInfo : AbstractDriveInfo
     {
         public IAmazonS3 Client { get; set; }
+        public string AccountName { get; set; }
         public string Name { get; set; }
 
-        public AwsS3ServiceDriveInfo(string url,string name)
+        public AwsS3ServiceDriveInfo(string url, string name)
         {
             var parts = url.Split('?');
             var dict = ParseValues(parts[1]);
@@ -31,6 +32,7 @@ namespace AzureStorageDrive
             var region = dict["region"];
             var client = Amazon.AWSClientFactory.CreateAmazonS3Client(accountName, accountKey, RegionEndpoint.USEast1);
             this.Client = client;
+            this.AccountName = accountName;
             this.Name = name;
         }
 
