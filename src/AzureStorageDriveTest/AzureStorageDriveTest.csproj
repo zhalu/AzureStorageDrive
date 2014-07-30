@@ -74,8 +74,10 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="GeneralTest.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="AwsS3Test.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AzureStorageDrive\AzureStorageDrive.csproj">
@@ -84,6 +86,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Choose>

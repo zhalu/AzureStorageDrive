@@ -12,11 +12,12 @@ namespace AzureStorageDrive
         {
             this.PathType = PathType.Invalid;
         }
-        public PathType PathType { get; set; }
         public string BucketName { get; set; }
-        public string DirectoryName { get; set; }
-        public S3Object Object { get; set; }
+        public PathType PathType { get; set; }
+        public string Name { get; set; }
+        public string Prefix { get; set; }
+        public string Key { get; set; }
         public bool IsRootDirectory { get; set; }
-        public List<string> Parts { get; set; }
+        public bool AlreadyExit { get; set; }
     }
 }

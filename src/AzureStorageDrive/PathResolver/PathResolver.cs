@@ -10,13 +10,15 @@ namespace AzureStorageDrive
 {
     public class PathResolver
     {
-        
         public const string PathSeparator = "\\";
         public const string AlternatePathSeparator = "/";
         public const string Root = "\\";
 
-        public static Dictionary<string, AbstractDriveInfo> Drives = new Dictionary<string, AbstractDriveInfo>();
+        protected const string SharePattern = @"^[a-z0-9][a-z0-9-]{2,}$";
+        protected const string FilePattern = @"^[^*/]+";
 
+        public static Dictionary<string, AbstractDriveInfo> Drives = new Dictionary<string, AbstractDriveInfo>();
+        
         public static List<string> SplitPath(string path)
         {
             var list = new List<string>();
@@ -24,7 +26,8 @@ namespace AzureStorageDrive
             {
                 //path = path.TrimStart(Root[0]);
                 path = path.Trim().Replace(PathResolver.AlternatePathSeparator, PathResolver.PathSeparator);
-                var parts = path.Split(new char[] { PathResolver.PathSeparator[0] }, StringSplitOptions.RemoveEmptyEntries);
+                var parts = path.Split(new char[]{PathSeparator[0]}, StringSplitOptions.RemoveEmptyEntries);
+
                 foreach (var p in parts)
                 {
                     if (p == "." || string.IsNullOrEmpty(p))

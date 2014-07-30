@@ -6,9 +6,12 @@ REM #    it to another.                        #
 REM ############################################
 
 set ROOT=%~dp0
-set DRIVE=x
-set ACCOUNT=<your account>
-set KEY=<your key>
+set DRIVE=
+set ACCOUNT=
+set KEY=
+set REGION=
 
 @echo on
-powershell -noexit -command "import-module %ROOT%\GeniusDrive.psd1; New-PSDrive -name %DRIVE% -psprovider GeniusDrive -root /; %DRIVE%:; ni f -type AzureFile -value http://%ACCOUNT%.file.core.windows.net/?account=%ACCOUNT%`&key=%KEY%"
+@rem powershell -noexit -command "import-module %ROOT%\GeniusDrive.psd1; New-PSDrive -name %DRIVE% -psprovider GeniusDrive -root /; %DRIVE%:; ni f -type AzureFile -value http://%ACCOUNT%.file.core.windows.net/?account=%ACCOUNT%`&key=%KEY%"
+
+powershell -noexit -command "import-module %ROOT%\GeniusDrive.psd1; New-PSDrive -name %DRIVE% -psprovider GeniusDrive -root /; %DRIVE%:; ni f -type AwsS3File -value https://console.aws.amazon.com/?account=%ACCOUNT%`&key=%KEY%`&region=%REGION" 

@@ -10,8 +10,7 @@ namespace AzureStorageDrive
 {
     public class AzureFilePathResolver : PathResolver
     {
-        private const string SharePattern = @"^[a-z0-9][a-z0-9-]{2,}$";
-        private const string FilePattern = @"^[^*/]+";
+        
         public static AzureFilePathResolveResult ResolvePath(CloudFileClient client, string path, PathType hint = PathType.Unknown, bool skipCheckExistence = true)
         {
             var result = new AzureFilePathResolveResult();
@@ -27,16 +26,14 @@ namespace AzureStorageDrive
             {
                 result.PathType = PathType.AzureFileRoot;
             }
-
-            if (parts.Count > 0)
+            else if (parts.Count > 0)
             {
                 result.Share = client.GetShareReference(parts[0]);
                 result.Directory = result.Share.GetRootDirectoryReference();
                 result.PathType = PathType.AzureFileDirectory;
                 result.RootDirectory = result.Directory;
             }
-
-            if (parts.Count > 1)
+            else
             {
                 for (var level = 1; level < parts.Count - 1; ++level)
                 {
