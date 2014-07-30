@@ -18,3 +18,13 @@
 /src/AzureStorageDrive/start.test.cmd
 /src/packages/AWSSDK.2.1.7.0
 /src/BlobClient/obj/Debug
+src/packages/AWSSDK.2.2.1.0/AWSSDK.2.2.1.0.nupkg
+src/packages/AWSSDK.2.2.1.0/lib/net35/AWSSDK.dll
+*.pdb
+src/packages/AWSSDK.2.2.1.0/lib/net45/AWSSDK.dll
+src/packages/AWSSDK.2.2.1.0/lib/portable-wpa+netcore45/AWSSDK.dll
+src/packages/AWSSDK.2.2.1.0/lib/windows8/AWSSDK.dll
+src/packages/AWSSDK.2.2.1.0/lib/windowsphone8/AWSSDK.dll
+src/packages/AWSSDK.2.2.1.0/tools/account-management.ps1
+src/packages/AWSSDK.2.2.1.0/tools/net35/install.ps1
+src/packages/AWSSDK.2.2.1.0/tools/net45/install.ps1
