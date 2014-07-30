@@ -36,10 +36,7 @@ namespace AzureStorageDrive
 
         public override void GetChildItems(string path, bool recurse)
         {
-            /* TODO:
-             * Recurse
-             */
-            var groups = recurse ? new List<string>() : null;
+            var subPaths = recurse ? new List<string>() : null;
 
             var items = this.ListItems(path);
             foreach (var item in items)
@@ -47,10 +44,31 @@ namespace AzureStorageDrive
                 if (item is Bucket)
                 {
                     this.RootProvider.WriteItemObject(item, path, true);
+                    if (recurse)
+                    {
+                        Bucket b = item as Bucket;
+                        subPaths.Add(b.Name);
+                    }
                 }
                 else if (item is OssObjectSummary)
                 {
                     this.RootProvider.WriteItemObject(item, path, false);
+                    if (recurse)
+                    {
+                        OssObjectSummary o = item as OssObjectSummary;
+                        if (o.Key.EndsWith("/"))
+                        {
+                            subPaths.Add(o.BucketName + @"\" + o.Key.Replace("/", PathResolver.PathSeparator));
+                        }
+                    }
+                }
+            }
+
+            if (recurse)
+            {
+                foreach (string subPath in subPaths)
+                {
+                    GetChildItems(subPath, true);
                 }
             }
         }

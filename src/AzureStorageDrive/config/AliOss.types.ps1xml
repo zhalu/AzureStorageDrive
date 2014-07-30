@@ -32,6 +32,10 @@
         <Name>LastModified</Name>
         <GetScriptBlock>$_.CreationDate</GetScriptBlock>
       </ScriptProperty>
+      <ScriptProperty>
+        <Name>FullName</Name>
+        <GetScriptBlock>$name=$_.Name; "//$name"</GetScriptBlock>
+      </ScriptProperty>
     </Members>
   </Type>
   <Type>
@@ -52,6 +56,10 @@
       <ScriptProperty>
         <Name>Name</Name>
         <GetScriptBlock>$parts=$_.Key.trim("/").split("/");$parts[$parts.length-1]</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>FullName</Name>
+        <GetScriptBlock>$b=$_.BucketName;$k=$_.Key.trim("/");"//$b/$k"</GetScriptBlock>
       </ScriptProperty>
     </Members>
   </Type>

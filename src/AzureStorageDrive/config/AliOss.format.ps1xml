@@ -7,7 +7,10 @@
         <TypeName>Aliyun.OpenServices.OpenStorageService.Bucket</TypeName>
         <TypeName>Aliyun.OpenServices.OpenStorageService.OssObjectSummary</TypeName>
       </ViewSelectedBy>
-
+      <GroupBy>
+        <ScriptBlock>$_.FullName.substring(0, $_.FullName.lastIndexOf("/"))</ScriptBlock>
+        <Label>Container</Label>
+      </GroupBy>
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
