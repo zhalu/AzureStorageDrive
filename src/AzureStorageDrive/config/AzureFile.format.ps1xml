@@ -38,10 +38,10 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <ScriptBlock>$_.DirectoryTag</ScriptBlock>
+                <ScriptBlock>$_.TypeTag</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>$_.Length</ScriptBlock>
+                <ScriptBlock>$_.ObjectLength</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>$_.Name</ScriptBlock>
