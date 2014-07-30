@@ -16,8 +16,8 @@
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Name</Label>
-            <Width>10</Width>
-            <Alignment>Right</Alignment>
+            <Width>25</Width>
+            <Alignment>Left</Alignment>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>URL</Label>
