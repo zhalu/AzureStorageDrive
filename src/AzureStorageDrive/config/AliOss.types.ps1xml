@@ -5,7 +5,11 @@
     <Members>
       <ScriptProperty>
         <Name>Type</Name>
-        <GetScriptBlock>"AliOss"</GetScriptBlock>
+        <GetScriptBlock>"AliOSS"</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>Description</Name>
+        <GetScriptBlock>$_.AccountName</GetScriptBlock>
       </ScriptProperty>
     </Members>
   </Type>

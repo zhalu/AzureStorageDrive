@@ -16,6 +16,8 @@ namespace AzureStorageDrive
     {
         public OssClient Client { get; set; }
 
+        public string AccountName { get; set; }
+
         public AliOssServiceDriveInfo(string credential, string name)
         {
             this.Name = name;
@@ -24,6 +26,7 @@ namespace AzureStorageDrive
             var accountKey = dict["key"];
 
             this.Client = new OssClient(accountName, accountKey);
+            this.AccountName = accountName;
         }
 
         public override void NewItem(string path, string type, object newItemValue)

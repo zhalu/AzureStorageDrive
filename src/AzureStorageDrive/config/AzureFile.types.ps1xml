@@ -8,7 +8,7 @@
         <GetScriptBlock>"AzureFile"</GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
-        <Name>URL</Name>
+        <Name>Description</Name>
         <GetScriptBlock>$_.Endpoint</GetScriptBlock>
       </ScriptProperty>
     </Members>

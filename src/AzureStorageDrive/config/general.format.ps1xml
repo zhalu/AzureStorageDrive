@@ -21,7 +21,7 @@
             <Alignment>Left</Alignment>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>URL</Label>
+            <Label>Description</Label>
             <Alignment>left</Alignment>
           </TableColumnHeader>
         </TableHeaders>
@@ -35,7 +35,7 @@
                 <ScriptBlock>$_.Name</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>$_.URL</ScriptBlock>
+                <ScriptBlock>$_.Description</ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
