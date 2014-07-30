@@ -5,7 +5,7 @@
     <Members>
       <ScriptProperty>
         <Name>Type</Name>
-        <GetScriptBlock>"AzureBlob"</GetScriptBlock>
+        <GetScriptBlock>"Azure Blob"</GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
         <Name>Description</Name>
