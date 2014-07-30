@@ -85,8 +85,8 @@ namespace AzureStorageDrive
                     if (s3O != null)
                     {
                         var r = AwsS3PathResolver.ResolvePath(Client, s3O.Key, false);
-                        bool isContainer = r.PathType == PathType.AwsS3Directory || r.PathType == PathType.AwsS3Root;
-                        RootProvider.WriteItemObject(r.Name, r.Key, isContainer);
+                        var isContainer = r.PathType == PathType.AwsS3Directory || r.PathType == PathType.AwsS3Root;
+                        RootProvider.WriteItemObject(s3O, r.Key, isContainer);
                         if (recurse && isContainer)
                         {
                             GetChildItems(r.Key, recurse);
@@ -95,7 +95,7 @@ namespace AzureStorageDrive
                     else
                     {
                         var s3B = item as S3Bucket;
-                        RootProvider.WriteItemObject(s3B.BucketName, "/", true);
+                        RootProvider.WriteItemObject(s3B, "/", true);
                         if (recurse)
                         {
                             GetChildItems(s3B.BucketName, recurse);
