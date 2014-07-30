@@ -17,6 +17,10 @@ using System.Threading.Tasks;
 
 namespace AzureStorageDrive
 {    
+    public class AwsMetaData
+    {
+        public int Size { get; set; }
+    }
     public class AwsS3ServiceDriveInfo : AbstractDriveInfo
     {
         public IAmazonS3 Client { get; set; }
@@ -73,7 +77,18 @@ namespace AzureStorageDrive
                 }
             }
         }
-
+        public AwsMetaData GetMetaData(string bucketName, string key)
+        {
+            GetObjectMetadataRequest request = new GetObjectMetadataRequest{
+                 BucketName = bucketName,
+                 Key = key
+            };
+            var response = Client.GetObjectMetadata(request);
+            return new AwsMetaData
+            {
+                Size = (int)response.ContentLength
+            };
+        }
         public override void GetChildItems(string path, bool recurse)
         {
             var items = this.ListItems(path);

@@ -75,6 +75,8 @@
   <ItemGroup>
     <Compile Include="CopyJob\AliOssCopySource.cs" />
     <Compile Include="CopyJob\AliOssCopyTarget.cs" />
+    <Compile Include="CopyJob\AwsS3CopySource.cs" />
+    <Compile Include="CopyJob\AwsS3CopyTarget.cs" />
     <Compile Include="CopyJob\AzureBlobCopySource.cs" />
     <Compile Include="CopyJob\AzureFileCopySource.cs" />
     <Compile Include="CopyJob\AzureBlobCopyTarget.cs" />
