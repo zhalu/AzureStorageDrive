@@ -17,15 +17,11 @@
     <Name>Microsoft.WindowsAzure.Storage.File.CloudFile</Name>
     <Members>
       <ScriptProperty>
-        <Name>DirectoryTag</Name>
+        <Name>TypeTag</Name>
         <GetScriptBlock>[string]::Empty</GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
-        <Name>IsDirectory</Name>
-        <GetScriptBlock>$false</GetScriptBlock>
-      </ScriptProperty>
-      <ScriptProperty>
-        <Name>Length</Name>
+        <Name>ObjectLength</Name>
         <GetScriptBlock>$_.Properties.Length</GetScriptBlock>
       </ScriptProperty>
     </Members>
@@ -34,15 +30,11 @@
     <Name>Microsoft.WindowsAzure.Storage.File.CloudFileShare</Name>
     <Members>
       <ScriptProperty>
-        <Name>DirectoryTag</Name>
+        <Name>TypeTag</Name>
         <GetScriptBlock>"S"</GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
-        <Name>IsDirectory</Name>
-        <GetScriptBlock>$true</GetScriptBlock>
-      </ScriptProperty>
-      <ScriptProperty>
-        <Name>Length</Name>
+        <Name>ObjectLength</Name>
         <GetScriptBlock>""</GetScriptBlock>
       </ScriptProperty>
     </Members>
@@ -51,15 +43,11 @@
     <Name>Microsoft.WindowsAzure.Storage.File.CloudFileDirectory</Name>
     <Members>
       <ScriptProperty>
-        <Name>DirectoryTag</Name>
+        <Name>TypeTag</Name>
         <GetScriptBlock>"D"</GetScriptBlock>
       </ScriptProperty>
       <ScriptProperty>
-        <Name>IsDirectory</Name>
-        <GetScriptBlock>$true</GetScriptBlock>
-      </ScriptProperty>
-      <ScriptProperty>
-        <Name>Length</Name>
+        <Name>ObjectLength</Name>
         <GetScriptBlock>[string]::Empty</GetScriptBlock>
       </ScriptProperty>
     </Members>
