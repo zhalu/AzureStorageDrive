@@ -33,10 +33,7 @@
     <Reference Include="Aliyun.OpenServices">
       <HintPath>..\External\Aliyun.OpenServices.dll</HintPath>
     </Reference>
-    <Reference Include="AWSSDK">
-      <HintPath>..\packages\AWSSDK.2.1.7.0\lib\net45\AWSSDK.dll</HintPath>
-    </Reference>
-	<Reference Include="AWSSDK, Version=2.2.1.0, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
+    <Reference Include="AWSSDK, Version=2.2.1.0, Culture=neutral, PublicKeyToken=9f476d3089b52be3, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\AWSSDK.2.2.1.0\lib\net45\AWSSDK.dll</HintPath>
     </Reference>
