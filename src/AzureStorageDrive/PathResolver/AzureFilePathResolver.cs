@@ -26,14 +26,16 @@ namespace AzureStorageDrive
             {
                 result.PathType = PathType.AzureFileRoot;
             }
-            else if (parts.Count > 0)
+
+            if (parts.Count > 0)
             {
                 result.Share = client.GetShareReference(parts[0]);
                 result.Directory = result.Share.GetRootDirectoryReference();
                 result.PathType = PathType.AzureFileDirectory;
                 result.RootDirectory = result.Directory;
             }
-            else
+
+            if (parts.Count > 1)
             {
                 for (var level = 1; level < parts.Count - 1; ++level)
                 {
