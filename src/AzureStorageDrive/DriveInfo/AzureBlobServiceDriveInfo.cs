@@ -272,9 +272,12 @@ namespace AzureStorageDrive
             if (parts.Count > 0)
             {
                 var container = CreateContainerIfNotExists(parts[0]);
-                var dirObj = container.GetPageBlobReference(PathResolver.GetSubpath(path) + PathResolver.PathSeparator);
 
-                dirObj.Create(0);
+                if (parts.Count > 1)
+                {
+                    var dirObj = container.GetPageBlobReference(PathResolver.GetSubpath(path) + PathResolver.PathSeparator);
+                    dirObj.Create(0);
+                }
             }
         }
 
