@@ -20,6 +20,9 @@ namespace AzureStorageDrive
                 case "azureblob":
                     var b = new AzureBlobServiceDriveInfo(value as string, name);
                     return b;
+                case "alioss":
+                    var a = new AliOssServiceDriveInfo(value as string, name);
+                    return a;
                 case "awss3file":
                     return new AwsS3ServiceDriveInfo(value as string, name);
                 default:

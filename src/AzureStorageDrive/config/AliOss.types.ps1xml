@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Types>
+  <Type>
+    <Name>AzureStorageDrive.AliOssServiceDriveInfo</Name>
+    <Members>
+      <ScriptProperty>
+        <Name>Type</Name>
+        <GetScriptBlock>"AliOSS"</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>Description</Name>
+        <GetScriptBlock>$_.AccountName</GetScriptBlock>
+      </ScriptProperty>
+    </Members>
+  </Type>
+  <Type>
+    <Name>Aliyun.OpenServices.OpenStorageService.Bucket</Name>
+    <Members>
+      <ScriptProperty>
+        <Name>DirectoryTag</Name>
+        <GetScriptBlock>"B"</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>IsDirectory</Name>
+        <GetScriptBlock>$true</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>Length</Name>
+        <GetScriptBlock>""</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>LastModified</Name>
+        <GetScriptBlock>$_.CreationDate</GetScriptBlock>
+      </ScriptProperty>
+    </Members>
+  </Type>
+  <Type>
+    <Name>Aliyun.OpenServices.OpenStorageService.OssObjectSummary</Name>
+    <Members>
+      <ScriptProperty>
+        <Name>DirectoryTag</Name>
+        <GetScriptBlock>if ($_.Key.endsWith("/")) { "D" } else { [string]::Empty }</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>IsDirectory</Name>
+        <GetScriptBlock>if ($_.Key.endsWith("/")) { $true } else { $false }</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>Length</Name>
+        <GetScriptBlock>if ($_.Key.endsWith("/")) { [string]::Empty } else { $_.Size }</GetScriptBlock>
+      </ScriptProperty>
+      <ScriptProperty>
+        <Name>Name</Name>
+        <GetScriptBlock>$parts=$_.Key.trim("/").split("/");$parts[$parts.length-1]</GetScriptBlock>
+      </ScriptProperty>
+    </Members>
+  </Type>
+</Types>
