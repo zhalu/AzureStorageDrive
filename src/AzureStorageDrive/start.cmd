@@ -10,5 +10,8 @@ set DRIVE=x
 set ACCOUNT=<your account>
 set KEY=<your key>
 
+set ACCOUNT_Ali=<your account>
+set KEY_Ali=<your key>
+
 @echo on
-powershell -noexit -ExecutionPolicy Unrestricted -command "import-module %ROOT%\GeniusDrive.psd1; New-PSDrive -name %DRIVE% -psprovider GeniusDrive -root /; %DRIVE%:; ni f -type AzureFile -value http://%ACCOUNT%.file.core.windows.net/?account=%ACCOUNT%`&key=%KEY%"
+powershell -noexit -ExecutionPolicy Unrestricted -command "import-module %ROOT%\GeniusDrive.psd1; New-PSDrive -name %DRIVE% -psprovider GeniusDrive -root /; %DRIVE%:; ni f -type AzureFile -value http://%ACCOUNT%.file.core.windows.net/?account=%ACCOUNT%`&key=%KEY%; ni ali -type AliOss -value account=%ACCOUNT_Ali%`&key=%KEY_Ali%"

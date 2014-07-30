@@ -24,12 +24,14 @@ CLRVersion='4.0'
 
 # Format files (.ps1xml) to be loaded when importing this module
 FormatsToProcess = @(
+	'config\AliOss.format.ps1xml',
     'config\AzureFile.format.ps1xml',
 	'config\AzureBlob.format.ps1xml',
 	'config\general.format.ps1xml'
 )
 
 TypesToProcess = @(
+	'config\AliOss.types.ps1xml',
 	'config\AzureFile.types.ps1xml', 
 	'config\AzureBlob.types.ps1xml')
 

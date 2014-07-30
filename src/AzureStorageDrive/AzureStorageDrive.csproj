@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Aliyun.OpenServices">
+      <HintPath>..\External\Aliyun.OpenServices.dll</HintPath>
+    </Reference>
     <Reference Include="AWSSDK">
       <HintPath>..\packages\AWSSDK.2.1.7.0\lib\net45\AWSSDK.dll</HintPath>
     </Reference>
@@ -69,6 +72,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CopyJob\AliOssCopySource.cs" />
+    <Compile Include="CopyJob\AliOssCopyTarget.cs" />
     <Compile Include="CopyJob\AzureBlobCopySource.cs" />
     <Compile Include="CopyJob\AzureFileCopySource.cs" />
     <Compile Include="CopyJob\AzureBlobCopyTarget.cs" />
@@ -80,12 +85,15 @@
     <Compile Include="CopyJob\LocalCopyTarget.cs" />
     <Compile Include="CopyJob\LocalCopySource.cs" />
     <Compile Include="DriveInfo\AbstractDriveInfo.cs" />
+    <Compile Include="DriveInfo\AliOssServiceDriveInfo.cs" />
     <Compile Include="DriveInfo\AwsS3ServiceDriveInfo.cs" />
     <Compile Include="DriveInfo\AzureBlobServiceDriveInfo.cs" />
     <Compile Include="DriveInfo\AzureFileServiceDriveInfo.cs" />
     <Compile Include="AzureFileServiceProvider.cs" />
     <Compile Include="DriveInfo\DriveFactory.cs" />
     <Compile Include="GeniusDriveProvider.cs" />
+    <Compile Include="PathResolver\AliOssPathResolver.cs" />
+    <Compile Include="PathResolver\AliOssPathResolveResult.cs" />
     <Compile Include="PathResolver\AwsS3PathResolver.cs" />
     <Compile Include="PathResolver\AzureBlobPathResolver.cs" />
     <Compile Include="PathResolver\AwsS3PathResolveResult.cs" />
@@ -100,6 +108,12 @@
     <Compile Include="Util\Utils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="config\AliOss.format.ps1xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="config\AliOss.types.ps1xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="config\AzureBlob.types.ps1xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
