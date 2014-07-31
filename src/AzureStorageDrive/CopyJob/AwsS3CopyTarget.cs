@@ -37,6 +37,7 @@ namespace AzureStorageDrive.CopyJob
                         BucketName = Result.BucketName,
                         Key = Result.Key
                     };
+                    request.Metadata.Add("Name", name);
                     Drive.Client.PutObject(request);
                     return true;
                 }
