@@ -20,23 +20,26 @@ namespace AzureStorageDrive.CopyJob
         {
             Drive = drive;
             Target = target;
-            Result = AwsS3PathResolver.ResolvePath(Drive.Client, Target, skipCheckExistence: false);
+            Result = AwsS3PathResolver.ResolvePath(Drive.Client, Target,hint:PathType.AwsS3File, skipCheckExistence: false);
         }
         public bool Prepare(string name, long size)
         {
-            if(size > Constants.TB)
+            if (Result.PathType != PathType.Invalid)
             {
-                return false;
-            }
-            if(!Result.AlreadyExit)
-            {
-                PutObjectRequest request = new PutObjectRequest
+                if (size > Constants.TB)
                 {
-                    BucketName = Result.BucketName,
-                    Key = Result.Key
-                };
-                Drive.Client.PutObject(request);
-                return true;
+                    return false;
+                }
+                if (!Result.AlreadyExit)
+                {
+                    PutObjectRequest request = new PutObjectRequest
+                    {
+                        BucketName = Result.BucketName,
+                        Key = Result.Key
+                    };
+                    Drive.Client.PutObject(request);
+                    return true;
+                }
             }
             return false;
         }

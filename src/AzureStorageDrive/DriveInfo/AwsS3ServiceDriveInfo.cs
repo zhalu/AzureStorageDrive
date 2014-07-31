@@ -2,6 +2,7 @@
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
+using AzureStorageDrive.CopyJob;
 using AzureStorageDrive.Util;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
@@ -29,8 +30,7 @@ namespace AzureStorageDrive
 
         public AwsS3ServiceDriveInfo(string url, string name)
         {
-            var parts = url.Split('?');
-            var dict = ParseValues(parts[1]);
+            var dict = ParseValues(url);
             var accountName = dict["account"];
             var accountKey = dict["key"];
             var region = dict["region"];
@@ -622,12 +622,12 @@ namespace AzureStorageDrive
 
         public override CopyJob.ICopySource GetCopySource(string path)
         {
-            throw new NotImplementedException();
+            return new AwsS3CopySource(this, path);
         }
 
         public override CopyJob.ICopyTarget GetCopyTarget(string path)
         {
-            throw new NotImplementedException();
+            return new AwsS3CopyTarget(this, path);
         }
     }
 

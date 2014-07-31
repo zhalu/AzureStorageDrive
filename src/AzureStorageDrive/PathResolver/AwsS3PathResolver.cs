@@ -28,7 +28,7 @@ namespace AzureStorageDrive
             result.Name = parts.Last();
             result.Prefix = string.Join(AlternatePathSeparator, parts.Take(parts.Count-1));
             bool isFile = false;
-            if (!skipCheckExistence && AwsS3Util.CheckFileExistence(client, result.BucketName, result.Key, out isFile))
+            if (!skipCheckExistence && AwsS3Util.CheckFileExistence(client, result.BucketName, result.Key,hint, out isFile))
             {
                 result.AlreadyExit = true;
             }

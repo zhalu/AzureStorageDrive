@@ -6,15 +6,17 @@ REM #    it to another.                        #
 REM ############################################
 
 set ROOT=%~dp0
-set DRIVE=
+set DRIVE=N
 set ACCOUNT=
 set KEY=
-set REGION=
 
-set ACCOUNT_Ali=<your account>
-set KEY_Ali=<your key>
+
+set ACCOUNT_Ali=
+set KEY_Ali=
+
+set S3ACCOUNT=
+set S3KEY=
+set S3REGION=
 
 @echo on
-@rem powershell -noexit -ExecutionPolicy Unrestricted -command "import-module %ROOT%\GeniusDrive.psd1; New-PSDrive -name %DRIVE% -psprovider GeniusDrive -root /; %DRIVE%:; ni f -type AzureFile -value http://%ACCOUNT%.file.core.windows.net/?account=%ACCOUNT%`&key=%KEY%; ni ali -type AliOss -value account=%ACCOUNT_Ali%`&key=%KEY_Ali%"
-@rem powershell -noexit -command "import-module %ROOT%\GeniusDrive.psd1; New-PSDrive -name %DRIVE% -psprovider GeniusDrive -root /; %DRIVE%:; ni f -type AzureFile -value http://%ACCOUNT%.file.core.windows.net/?account=%ACCOUNT%`&key=%KEY%"
-@rempowershell -noexit -command "import-module %ROOT%\GeniusDrive.psd1; New-PSDrive -name %DRIVE% -psprovider GeniusDrive -root /; %DRIVE%:; ni f -type AwsS3File -value https://console.aws.amazon.com/?account=%ACCOUNT%`&key=%KEY%`&region=%REGION" 
+powershell -noexit -ExecutionPolicy Unrestricted -command "import-module %ROOT%\GeniusDrive.psd1; New-PSDrive -name %DRIVE% -psprovider GeniusDrive -root /; %DRIVE%:; ni f -type AzureFile -value account=%ACCOUNT%`&key=%KEY%; ni ali -type AliOss -value account=%ACCOUNT_Ali%`&key=%KEY_Ali%; ni s3 -type AwsS3File -value account=%S3ACCOUNT%`&key=%S3KEY%`&region=%S3REGION%"
