@@ -1,10 +1,9 @@
 GeniusDrive
 ====================
 
-"Mount" an Azure Storage File/Blob service just like a native disk in PowerShell. You can access it anywhere outside the data center, and copy files around.
+Most of us haven’t heard about GeniusDrive, but I guess most of us heard about Cloud Storage, especially Azure Storage. When you store your data on cloud, you get the A, B, C, D, E benefits that cloud offers to you. But the question is how you accessing those files stored on your cloud storage with a parity experience of access files stored on your local file system. Well, here we have GeniusDrive. 
 
-
-Will add AWS S3 service support soon.
+GeniusDrive enables you to mount a cloud storage account as a PowerShell Drive. So you could access your cloud data resources like a local file system drive in PowerShell console. For example, if you have azure storage account “azurestore110”, you could mount the blob storage in this account as a local directory “blob1” in GeniusDrive. After that, you could navigate into this directory using “cd blob1” and browse all blobs using “ls” or “dir” just like what you would in a local folder. Sounds cool? Well, this is not the coolest. The coolest thing is that you could mount as many as storage accounts on different cloud platforms (Azure, AWS S3, Aliyun OSS) to one single GeniusDrive and accessing the resources with a uniform experience. For example, you could mount your AWS S3 storage to a directory “awss3” and then mount an Ali OSS storage to another directory “oss”. After all this is done, you could easily copy files among them using the same command which you would use when copying files from folder to folder. 
 
 Usage
 -----
@@ -31,6 +30,7 @@ In your other PowerShell session, you can follow these steps:
 
 Supported Operations
 --------------------
+mount Azure Blob, Azure File, AWS S3, Aliyun OSS as a directory in Genius Drive.
 
 ###Navigation
 
