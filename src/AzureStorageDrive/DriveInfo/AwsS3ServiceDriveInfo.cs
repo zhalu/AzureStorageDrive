@@ -136,7 +136,7 @@ namespace AzureStorageDrive
                         {
                             //var oPath = AwsS3PathResolver.ResolvePath(Client,o.Key,false);
                             //RootProvider.WriteItemObject(oPath.Name, oPath.Prefix, oPath.PathType != PathType.AwsS3File);
-                            RootProvider.WriteItemObject(o.Key, o.Key, o.Key.EndsWith(PathResolver.AlternatePathSeparator));
+                            RootProvider.WriteItemObject(o, o.Key, o.Key.EndsWith(PathResolver.AlternatePathSeparator));
                             return true;
                         });
                     break;
@@ -204,13 +204,40 @@ namespace AzureStorageDrive
                 case PathType.AwsS3Directory:
                     if (result.AlreadyExit)
                     {
+                        List<string> folders = new List<string>();
+                        List<S3Object> r = new List<S3Object>();
                         ListObjectsRequest lRequest = new ListObjectsRequest
                         {
                             BucketName = result.BucketName,
                             Prefix = result.Key
                         };
                         var response = Client.ListObjects(lRequest);
-                        return response.S3Objects.Where(s=>s.Key !=result.Key).ToList();
+                        foreach(var s in response.S3Objects)
+                        {
+                            if (s.Key != result.Key)
+                            {
+                                var parts = PathResolver.SplitPath(s.Key);
+                                {
+                                    if (parts.Count > 1 ||
+                                        s.Key.EndsWith(PathResolver.AlternatePathSeparator))
+                                    {
+                                        if (!folders.Contains(parts[0]))
+                                        {
+                                            folders.Add(parts[0]);
+                                            r.Add(new S3Object
+                                            {
+                                                Key = parts[0] + PathResolver.AlternatePathSeparator
+                                            });
+                                        }
+                                    }
+                                    else
+                                    {
+                                        r.Add(s);
+                                    }
+                                }
+                            }
+                        }
+                        return r;
                     }
                     break;
                 case PathType.AwsS3Root:
