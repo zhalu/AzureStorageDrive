@@ -611,18 +611,6 @@ namespace AzureStorageDrive
                 target.Add(name, info.Value.ToString());
             }
         }
-
-        public override CopyJob.ICopySource GetCopySource(string path)
-        {
-            var s = new AzureBlobCopySource(this, path);
-            return s;
-        }
-
-        public override CopyJob.ICopyTarget GetCopyTarget(string path)
-        {
-            var t = new AzureBlobCopyTarget(this, path);
-            return t;
-        }
     }
 
     class AzureBlobReader : IContentReader

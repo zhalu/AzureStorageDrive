@@ -245,14 +245,5 @@ namespace AzureStorageDrive
             throw new NotImplementedException();
         }
 
-        public override CopyJob.ICopySource GetCopySource(string path)
-        {
-            return new AliOssCopySource(this, path);
-        }
-
-        public override CopyJob.ICopyTarget GetCopyTarget(string path)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

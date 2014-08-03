@@ -81,6 +81,9 @@
     <Compile Include="CopyJob\AzureFileCopySource.cs" />
     <Compile Include="CopyJob\AzureBlobCopyTarget.cs" />
     <Compile Include="CopyJob\AzureFileCopyTarget.cs" />
+    <Compile Include="CopyJob\BufferManager.cs" />
+    <Compile Include="CopyJob\BufferRange.cs" />
+    <Compile Include="CopyJob\CopySourceItem.cs" />
     <Compile Include="CopyJob\ICopyableSource.cs" />
     <Compile Include="CopyJob\ICopyableTarget.cs" />
     <Compile Include="CopyJob\ICopySource.cs" />

@@ -167,15 +167,15 @@ namespace AzureStorageDrive
             var sourceIsLocal = PathResolver.IsLocalPath(path);
             var targetIsLocal = PathResolver.IsLocalPath(copyPath);
 
-            ICopySource source = null;
-            ICopyTarget target = null;
+            ICopyableSource source = null;
+            ICopyableTarget target = null;
+
+            var sourcePath = string.Empty;
+            var targetPath = string.Empty;
 
             if (sourceIsLocal) 
             {
-                source = new LocalCopySource() 
-                {
-                    LocalPath = PathResolver.ConvertToRealLocalPath(path)
-                };
+                throw new NotImplementedException();
             } 
             else 
             {
@@ -192,11 +192,12 @@ namespace AzureStorageDrive
                     return;
                 }
 
-               source = drive.GetCopySource(PathResolver.GetSubpath(path));
+                source = drive;
+                sourcePath = PathResolver.GetSubpath(path);
             }
 
             if (targetIsLocal) {
-                target = new LocalCopyTarget(PathResolver.ConvertToRealLocalPath(copyPath));
+                throw new NotImplementedException();
             } else {
                 var parts = PathResolver.SplitPath(copyPath);
                 if (parts.Count == 0)
@@ -211,7 +212,8 @@ namespace AzureStorageDrive
                     return;
                 }
 
-                target = drive.GetCopyTarget(PathResolver.GetSubpath(copyPath));
+                target = drive;
+                targetPath = PathResolver.GetSubpath(copyPath);
             }
 
             if (sourceIsLocal && targetIsLocal)
@@ -219,7 +221,109 @@ namespace AzureStorageDrive
                 throw new NotSupportedException();
             }
 
-            source.CopyTo(target, recurse, deleteSource);
+            //check if rename is supported and meets the request
+            if (deleteSource && source == target && source.IsRenameSupported())
+            {
+                throw new NotImplementedException();
+            }
+
+            //Get down to real copy job
+            var bufferManager = new BufferManager();
+
+            var isTransferringSingleFile = !(source as AbstractDriveInfo).IsItemContainer(sourcePath);
+            if (isTransferringSingleFile)
+            {
+                var targetIsContainer = (target as AbstractDriveInfo).IsItemContainer(targetPath);
+                if (targetIsContainer)
+                {
+                    //append the source file name to target path
+                    targetPath = PathResolver.Combine(PathResolver.SplitPath(targetPath), PathResolver.SplitPath(sourcePath).Last());
+                }
+            }
+
+            //List each file and upload them async
+            var copyItems = source.ListFilesForCopy(sourcePath, recurse);
+            var tasks = new List<Task>();
+            foreach (var item in copyItems)
+            {
+                var blockIds = bufferManager.ReserveBlocksBySize(item.Size);
+                var task = this.TransferFile(source, bufferManager, blockIds, item, target, targetPath, isTransferringSingleFile);
+
+                tasks.Add(task);
+            }
+
+            //wait for all tasks to finish
+            Task.WaitAll(tasks.ToArray());
+        }
+
+        private Task TransferFile(ICopyableSource source, BufferManager bufferManager, List<int> blockIds, CopySourceItem item, ICopyableTarget target, string targetPath, bool isTransferringSingleFile)
+        {
+            return Task.Run(() =>
+            {
+                object fileObject;
+                if (!target.BeforeUploadingFile(
+                    basePath: targetPath,
+                    relativePath: item.RelativePath,
+                    size: item.Size,
+                    isTransferringSingFile: isTransferringSingleFile,
+                    fileObject: out fileObject))
+                {
+                    throw new Exception(string.Format("Cannot create target file at {0}\\{1}, SingleFile?: {2}", target, item.RelativePath, isTransferringSingleFile));
+                }
+
+                System.Threading.Tasks.Parallel.For(0, blockIds.Count, (i) =>
+                {
+                    var iteration = 0;
+                    var buffer = bufferManager.Bytes;
+                    var range = bufferManager.GetRange(blockIds[i]);
+                    while (true)
+                    {
+                        var start = (range.Length * iteration * blockIds.Count) + i * range.Length;
+                        var length = range.Length;
+                        var blockLabel = iteration * blockIds.Count + i;
+
+                        //if we already pass the end, then we are done.
+                        if (start >= item.Size)
+                        {
+                            break;
+                        }
+
+                        //if it's the last block, change the end
+                        if (item.Size < start + length)
+                        {
+                            length = (int)(item.Size - start);
+                        }
+
+                        try
+                        {
+                            source.DownloadRange(
+                                copySourceItem: item,
+                                target: buffer,
+                                index: range.Start,
+                                fileOffset: start,
+                                length: length);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                        //put it
+                        target.UploadRange(
+                            fileObject: fileObject,
+                            buffer: buffer,
+                            offset: range.Start,
+                            count: length,
+                            targetOffset: start,
+                            blockLabel: blockLabel);
+
+                        iteration++;
+                    }
+
+                });
+
+                target.UploadCompleted(fileObject: fileObject, totalBlocksCount: bufferManager.CalculateMaxBlockCount(item.Size));
+            });
         }
 
         protected override void RemoveItem(string path, bool recurse)
