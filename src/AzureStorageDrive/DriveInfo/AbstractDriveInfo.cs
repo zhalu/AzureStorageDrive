@@ -44,8 +44,39 @@ namespace AzureStorageDrive
             return dict;
         }
 
-        public abstract ICopySource GetCopySource(string path);
+        public virtual IEnumerable<CopySourceItem> ListFilesForCopy(string path, bool recurse, List<string> baseParts = null)
+        {
+            throw new NotImplementedException();
+        }
 
-        public abstract ICopyTarget GetCopyTarget(string path);
+        public virtual bool IsRenameSupported()
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void DownloadRange(CopySourceItem copySourceItem, byte[] target, int index, long fileOffset, int length)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void UploadRange(object fileObject, byte[] buffer, int offset, int count, long targetOffset, long blockLabel)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void UploadCompleted(object fileObject, int totalBlocksCount)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual bool BeforeUploadingFile(string basePath, string relativePath, long size, bool isTransferringSingFile, out object fileObject)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual void CreateDirectory(string basePath, string relativePath)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

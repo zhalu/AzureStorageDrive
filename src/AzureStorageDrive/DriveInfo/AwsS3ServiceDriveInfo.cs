@@ -646,16 +646,6 @@ namespace AzureStorageDrive
             return false;
         }
         #endregion
-
-        public override CopyJob.ICopySource GetCopySource(string path)
-        {
-            return new AwsS3CopySource(this, path);
-        }
-
-        public override CopyJob.ICopyTarget GetCopyTarget(string path)
-        {
-            return new AwsS3CopyTarget(this, path);
-        }
     }
 
     class AwsS3Reader : IContentReader

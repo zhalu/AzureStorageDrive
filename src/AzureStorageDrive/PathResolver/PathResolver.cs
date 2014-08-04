@@ -73,17 +73,26 @@ namespace AzureStorageDrive
             return string.Join(PathResolver.PathSeparator, l.ToArray());
         }
 
+        public static string Combine(IEnumerable<string> parts, params string[] children)
+        {
+            if (parts == null)
+            {
+                return Combine(children);
+            }
+
+            return Combine(parts.Concat(children));
+        }
 
         public static string Combine(IEnumerable<string> parts)
         {
-            return Combine(parts.ToArray());
+            return string.Join(PathSeparator,
+                (from p in parts.Where(s => !string.IsNullOrEmpty(s))
+                 select p.Trim(PathSeparator[0], AlternatePathSeparator[0])).ToArray());
         }
 
         public static string Combine(params string[] parts)
         {
-            return string.Join(PathSeparator, 
-                (from p in parts.Where(s => !string.IsNullOrEmpty(s))
-                    select p.Trim(PathSeparator[0], AlternatePathSeparator[0])).ToArray());
+            return Combine(parts as IEnumerable<string>);
         }
 
 

@@ -13,6 +13,6 @@ namespace AzureStorageDrive.Util
         public const int GB = 1024 * MB;
         public const long TB = 1024L * GB;
         public const int BlockSize = 4 * 1024 * 1024; //default block size: 4MB
-        public static int Parallalism = 2 * Environment.ProcessorCount;
+        public static int Parallalism = 8 * Environment.ProcessorCount;
     }
 }

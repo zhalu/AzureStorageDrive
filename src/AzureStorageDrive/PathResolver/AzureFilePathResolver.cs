@@ -10,8 +10,7 @@ namespace AzureStorageDrive
 {
     public class AzureFilePathResolver : PathResolver
     {
-        
-        public static AzureFilePathResolveResult ResolvePath(CloudFileClient client, string path, PathType hint = PathType.Unknown, bool skipCheckExistence = true)
+        public static AzureFilePathResolveResult ResolvePath(CloudFileClient client, string path, PathType hint = PathType.Unknown, bool skipCheckExistence = true, bool createAncestorDirectories = false)
         {
             var result = new AzureFilePathResolveResult();
             var parts = SplitPath(path);
@@ -33,6 +32,11 @@ namespace AzureStorageDrive
                 result.Directory = result.Share.GetRootDirectoryReference();
                 result.PathType = PathType.AzureFileDirectory;
                 result.RootDirectory = result.Directory;
+
+                if (createAncestorDirectories && parts.Count > 1 && !result.Share.Exists())
+                {
+                    result.Share.Create();
+                }
             }
 
             if (parts.Count > 1)
@@ -41,6 +45,12 @@ namespace AzureStorageDrive
                 {
                     //assume it's directory
                     var dir = result.Directory.GetDirectoryReference(parts[level]);
+
+                    if (createAncestorDirectories && !dir.Exists())
+                    {
+                        dir.Create();
+                    }
+
                     if (result.PathType == PathType.AzureFileDirectory)
                     {
                         result.Directory = dir;

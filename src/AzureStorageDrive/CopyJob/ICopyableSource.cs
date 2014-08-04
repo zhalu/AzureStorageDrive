@@ -8,6 +8,10 @@ namespace AzureStorageDrive.CopyJob
 {
     public interface ICopyableSource
     {
-        ICopySource GetCopySource(string path);
+        IEnumerable<CopySourceItem> ListFilesForCopy(string path, bool recurse, List<string> baseParts = null);
+
+        bool IsRenameSupported();
+
+        void DownloadRange(CopySourceItem copySourceItem, byte[] target, int index, long fileOffset, int length);
     }
 }
