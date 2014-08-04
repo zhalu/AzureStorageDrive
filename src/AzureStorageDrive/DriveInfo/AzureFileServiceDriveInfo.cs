@@ -624,52 +624,81 @@ namespace AzureStorageDrive
             }
         }
 
+        #region copy
         public override IEnumerable<CopySourceItem> ListFilesForCopy(string path, bool recurse, List<string> baseParts = null)
         {
+            if (baseParts == null)
+            {
+                baseParts = new List<string>();
+            }
+
             var items = ListItems(path);
 
-            foreach(var i in items) {
-                
+            foreach(var i in items) 
+            {
                 var f = i as CloudFile;
                 if (f != null)
                 {
                     f.FetchAttributes();
-                    var item = new CopySourceItem();
-                    item.RelativePath = PathResolver.Combine(baseParts, f.Name);
-                    item.Object = f;
-                    item.Size = f.Properties.Length;
+                    var item = new CopySourceItem() 
+                    {
+                        IsContainer = false,
+                        RelativePath = PathResolver.Combine(baseParts, f.Name),
+                        Object = f,
+                        Size = f.Properties.Length 
+                    };
                     yield return item;
                     continue;
                 }
 
-                if (recurse) {
-                    var d = i as CloudFileDirectory;
-                    if (d != null)
+                var d = i as CloudFileDirectory;
+                if (d != null)
+                {
+                    baseParts.Add(d.Name);
+                    var relativePath = PathResolver.Combine(baseParts);
+                    var dirItem = new CopySourceItem()
                     {
-                        baseParts.Add(d.Name);
-                        var subpath = PathResolver.Combine(baseParts);
-                        var subitems = ListFilesForCopy(subpath, recurse, baseParts);
-                        foreach (var si in subitems) {
-                            yield return si;
-                        }
+                        IsContainer = true,
+                        RelativePath = relativePath,
+                        Size = 0,
+                        Object = d
+                    };
 
-                        baseParts.RemoveAt(baseParts.Count - 1);
-                        continue;
+                    yield return dirItem;
+
+                    var subpath = PathResolver.Combine(path, PathResolver.Combine(baseParts));
+                    var subitems = ListFilesForCopy(subpath, recurse, baseParts);
+                    foreach (var si in subitems) {
+                        yield return si;
                     }
 
-                    var s = i as CloudFileShare;
-                    if (s != null)
-                    {
-                        baseParts.Add(s.Name);
-                        var subpath = PathResolver.Combine(baseParts);
-                        var subitems = ListFilesForCopy(subpath, recurse, baseParts);
-                        foreach (var si in subitems) {
-                            yield return si;
-                        }
+                    baseParts.RemoveAt(baseParts.Count - 1);
+                    continue;
+                }
 
-                        baseParts.RemoveAt(baseParts.Count - 1);
-                        continue;
+                var s = i as CloudFileShare;
+                if (s != null)
+                {
+                    baseParts.Add(s.Name);
+                    var relativePath = PathResolver.Combine(baseParts);
+                    var dirItem = new CopySourceItem()
+                    {
+                        IsContainer = true,
+                        RelativePath = relativePath,
+                        Size = 0,
+                        Object = s
+                    };
+
+                    yield return dirItem;
+
+                    var subpath = PathResolver.Combine(path, PathResolver.Combine(baseParts));
+                    var subitems = ListFilesForCopy(subpath, recurse, baseParts);
+                    foreach (var si in subitems) {
+                        yield return si;
                     }
+
+                    baseParts.RemoveAt(baseParts.Count - 1);
+                    continue;
                 }
             }
         }
@@ -728,6 +757,23 @@ namespace AzureStorageDrive
                     return false;
             }
         }
+
+        public override void CreateDirectory(string basePath, string relativePath)
+        {
+            var path = PathResolver.Combine(PathResolver.SplitPath(basePath), PathResolver.SplitPath(relativePath).ToArray());
+
+            var r = AzureFilePathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFileDirectory, createAncestorDirectories: true);
+            switch (r.PathType)
+            {
+                case PathType.AzureFileDirectory:
+                    r.Directory.CreateIfNotExists();
+                    break;
+                default:
+                    throw new Exception("Failed to create directory " + path);
+            }
+        }
+
+        #endregion
     }
 
     class AzureFileReader : IContentReader

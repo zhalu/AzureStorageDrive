@@ -611,6 +611,118 @@ namespace AzureStorageDrive
                 target.Add(name, info.Value.ToString());
             }
         }
+
+        #region copy
+        //public override IEnumerable<CopySourceItem> ListFilesForCopy(string path, bool recurse, List<string> baseParts = null)
+        //{
+        //    throw new NotImplementedException();
+        //    var items = ListItems(path);
+
+        //    foreach (var i in items)
+        //    {
+        //        //var f = i as CloudFile;
+        //        //if (f != null)
+        //        //{
+        //        //    f.FetchAttributes();
+        //        //    var item = new CopySourceItem();
+        //        //    item.RelativePath = PathResolver.Combine(baseParts, f.Name);
+        //        //    item.Object = f;
+        //        //    item.Size = f.Properties.Length;
+        //        //    yield return item;
+        //        //    continue;
+        //        //}
+
+        //        //if (recurse)
+        //        //{
+        //        //    var d = i as CloudFileDirectory;
+        //        //    if (d != null)
+        //        //    {
+        //        //        baseParts.Add(d.Name);
+        //        //        var subpath = PathResolver.Combine(baseParts);
+        //        //        var subitems = ListFilesForCopy(subpath, recurse, baseParts);
+        //        //        foreach (var si in subitems)
+        //        //        {
+        //        //            yield return si;
+        //        //        }
+
+        //        //        baseParts.RemoveAt(baseParts.Count - 1);
+        //        //        continue;
+        //        //    }
+
+        //        //    var s = i as CloudFileShare;
+        //        //    if (s != null)
+        //        //    {
+        //        //        baseParts.Add(s.Name);
+        //        //        var subpath = PathResolver.Combine(baseParts);
+        //        //        var subitems = ListFilesForCopy(subpath, recurse, baseParts);
+        //        //        foreach (var si in subitems)
+        //        //        {
+        //        //            yield return si;
+        //        //        }
+
+        //        //        baseParts.RemoveAt(baseParts.Count - 1);
+        //        //        continue;
+        //        //    }
+        //        //}
+        //    }
+        //}
+
+        //public override bool IsRenameSupported()
+        //{
+        //    return false; //not supported yet.
+        //}
+
+
+        //public override void DownloadRange(CopySourceItem copySourceItem, byte[] target, int index, long fileOffset, int length)
+        //{
+        //    var file = copySourceItem.Object as CloudFile;
+        //    file.DownloadRangeToByteArray(target, index, fileOffset, length);
+        //}
+
+        //public override void UploadRange(object fileObject, byte[] buffer, int offset, int count, long targetOffset, long blockLabel)
+        //{
+        //    var file = fileObject as CloudFile;
+
+        //    using (var m = new MemoryStream(buffer, (int)offset, count))
+        //    {
+        //        file.WriteRange(m, targetOffset);
+        //    }
+        //}
+
+        //public override void UploadCompleted(object fileObject, int totalBlocksCount)
+        //{
+        //    //do nothing
+        //}
+
+
+        //public override bool BeforeUploadingFile(string basePath, string filePath, long size, bool isTransferringSingFile, out object fileObject)
+        //{
+        //    fileObject = null;
+        //    if (size > 1 * Constants.TB)
+        //    {
+        //        //cannot create >1TB file
+        //        return false;
+        //    }
+
+        //    var path = PathResolver.Combine(PathResolver.SplitPath(basePath));
+        //    if (!isTransferringSingFile)
+        //    {
+        //        path = PathResolver.Combine(PathResolver.SplitPath(basePath), PathResolver.SplitPath(filePath).ToArray());
+        //    }
+
+        //    var r = AzureFilePathResolver.ResolvePath(this.Client, path, hint: PathType.AzureFile, createAncestorDirectories: true);
+        //    switch (r.PathType)
+        //    {
+        //        case PathType.AzureFile:
+        //            r.File.Create(size);
+        //            fileObject = r.File;
+        //            return true;
+        //        default:
+        //            return false;
+        //    }
+        //}
+
+        #endregion
     }
 
     class AzureBlobReader : IContentReader

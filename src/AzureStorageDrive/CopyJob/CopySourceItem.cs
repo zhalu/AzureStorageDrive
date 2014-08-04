@@ -11,5 +11,6 @@ namespace AzureStorageDrive.CopyJob
         public string RelativePath { get; set; }
         public long Size { get; set; }
         public object Object { get; set; }
+        public bool IsContainer { get; set; }
     }
 }

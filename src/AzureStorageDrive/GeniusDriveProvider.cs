@@ -260,6 +260,15 @@ namespace AzureStorageDrive
         {
             return Task.Run(() =>
             {
+                //if the target is container/directory, then simple create this directory
+                if (item.IsContainer)
+                {
+                    target.CreateDirectory(
+                        basePath: targetPath,
+                        relativePath: item.RelativePath);
+                    return;
+                }
+
                 object fileObject;
                 if (!target.BeforeUploadingFile(
                     basePath: targetPath,

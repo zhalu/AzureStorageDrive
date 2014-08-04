@@ -73,5 +73,10 @@ namespace AzureStorageDrive
         {
             throw new NotImplementedException();
         }
+
+        public virtual void CreateDirectory(string basePath, string relativePath)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
